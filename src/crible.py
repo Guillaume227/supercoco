@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pygame import Rect
 
 
@@ -64,7 +65,7 @@ class Crible( dict ):
         xb,xh = sorted((x1,x2))
         yb,yh = sorted((y1,y2))
  
-        Xb,Yb, Xh,Yh = [ int(coor)/self.pas for coor in xb,yb,xh,yh ]
+        Xb,Yb, Xh,Yh = [ int(coor)/self.pas for coor in (xb,yb,xh,yh) ]
  
         if Xb == xb*self.pas:
             Xb -= 1
@@ -154,5 +155,5 @@ class Crible( dict ):
                 if (x-a)**2+(y-b)**2 > 2:
                     Intersection = self[x,y].intersection(self[a,b])
                     if Intersection:
-                        print Intersection
+                        print(Intersection)
                         raise ValueError('Crible incoherent, %d duplication(s) %d,%d et %d,%d'%(len(Intersection),x,y,a,b))

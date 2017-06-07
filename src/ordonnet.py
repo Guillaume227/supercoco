@@ -3,6 +3,7 @@ Created on 2 Jun 2012
 
 @author: Zarastro
 '''
+from __future__ import print_function
 
 class Ordonnet( object ):
     """Structure de donnees, dictionaire ordonne"""
@@ -80,7 +81,7 @@ class Ordonnet( object ):
             try:
                 assert i == self.__ordre[elem] # syncro de l'ordre du dictionaire et de la liste
             except:
-                print 'integrite', i, elem, self.__ordre[elem]
+                print('integrite', i, elem, self.__ordre[elem])
                 
             assert self.__elems.count(elem) == 1 # unicite des elements de la liste
             

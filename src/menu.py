@@ -1,6 +1,8 @@
 #! /usr/bin/env python
+from __future__ import print_function
+from __future__ import absolute_import
 import pygame
-import media
+from . import media
 import copy
 
 class SortieMenu(Exception):
@@ -472,7 +474,7 @@ class ChampParent(ElemInterface):
                 self.val_temp = None
                                
             except:
-                print 'echec de conversion', self.val_temp, self.valeur
+                print('echec de conversion', self.val_temp, self.valeur)
                 import traceback
                 traceback.print_exc()
                 pass

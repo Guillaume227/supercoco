@@ -1,16 +1,17 @@
 #! /usr/bin/env python
 
-from elems import ControlePerso
+from __future__ import absolute_import
+from .elems import ControlePerso
 from pygame.locals import *
-import intercalaires
-import media
-import menu
+from . import intercalaires
+from . import media
+from . import menu
 import os
-import partie
+from . import partie
 import pygame
 import sys
 import traceback
-import langues
+from . import langues
 
 class ChangeLangueExc( Exception ):
     pass

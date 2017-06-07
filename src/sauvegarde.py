@@ -3,11 +3,13 @@ Created on 16 Aug 2012
 
 @author: Zarastro
 '''
+from __future__ import print_function
+from __future__ import absolute_import
 
 import pickle 
 import os
 import sys
-import menu
+from . import menu
 
 nouvelle_entree = '*Nouveau*'
 
@@ -123,7 +125,7 @@ def Ouvrir(nom, dossier='', suffixe=''):
         filePath += suffixe 
         
     nom = os.path.basename(filePath)
-    print 'Ouverture  de', nom
+    print('Ouverture  de', nom)
     
     fileObj = open( filePath, 'rb' )
     

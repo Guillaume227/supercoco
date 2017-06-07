@@ -1,9 +1,11 @@
 #! /usr/bin/env python
 
-import media
-from media import charge_image
+from __future__ import print_function
+from __future__ import absolute_import
+from . import media
+from .media import charge_image
 
-import elems
+from . import elems
 import pickle
 import os
 
@@ -52,7 +54,7 @@ class Monde(object):
                 if isinstance(Elem, elems.PositionDepart):
                     return Elem
                 
-            print self, 'position depart non trouvee' 
+            print(self, 'position depart non trouvee') 
             
         return elems.PositionDepart((16,380)) # position par defaut
           
@@ -60,7 +62,7 @@ class Monde(object):
     def composition(self):
         """ Affiche la composition du monde """
         for Elem in sorted( self.Elements, key = lambda x: x.__class__.__name__ ):
-            print Elem
+            print(Elem)
     
 
 
@@ -94,7 +96,7 @@ def loads(fileObj):
 
 def Ouvrir(fileName=''):
 
-    print 'Ouvrir', fileName
+    print('Ouvrir', fileName)
             
     if not fileName.endswith(suffixe):
         fileName += suffixe

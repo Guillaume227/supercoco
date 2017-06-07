@@ -1,10 +1,12 @@
 #! /usr/bin/env python
 
-from media import charge_image, charge_son, TAILLE_BLOC
-from vect2d import Vec
-import interruptions
+from __future__ import print_function
+from __future__ import absolute_import
+from .media import charge_image, charge_son, TAILLE_BLOC
+from .vect2d import Vec
+from . import interruptions
 import math
-import media
+from . import media
 import pygame
 import random
 import traceback
@@ -129,7 +131,7 @@ class Dessinable(object):
         
     def set_images( self, images,  versGauche=True ):
         if self.miroir:
-            self.images = [ [ charge_image( imgName, flip=flip ) for imgName in images ] for flip in versGauche, not versGauche ]
+            self.images = [ [ charge_image( imgName, flip=flip ) for imgName in images ] for flip in (versGauche, not versGauche) ]
         else:
             self.images = [ [ charge_image( imgName ) for imgName in images ] ] * 2
 
@@ -147,7 +149,8 @@ class Dessinable(object):
         return self.rect.top, self.rect.right, self.rect.bottom, self.rect.left
     
     @cotesRect.setter
-    def cotesRect(self,(cote,val)):
+    def cotesRect(self, xxx_todo_changeme):
+        (cote,val) = xxx_todo_changeme
         if cote == HAUT:
             self.rect.top = val
         elif cote == BAS:
@@ -797,9 +800,9 @@ class Perso(Dessinable,Personnage):
         if self._nom == 'coco':
             
             NomCouleurs = [self._nom]
-            nomImagesKamea = [ "cococoudakamea%d.png"%i for i in 1,2,3,4,5 ]
+            nomImagesKamea = [ "cococoudakamea%d.png"%i for i in (1,2,3,4,5) ]
 
-            self.images_kamea   = [ [ charge_image( img, flip=flip ) for img in nomImagesKamea ] for flip in False, True ]
+            self.images_kamea   = [ [ charge_image( img, flip=flip ) for img in nomImagesKamea ] for flip in (False, True) ]
             
             """
             self.toutes_images = [ Images_petit, Images_grand ]
@@ -813,11 +816,11 @@ class Perso(Dessinable,Personnage):
             
             for nomCouleur in NomCouleurs:
                 
-                self.nomImages = [ nomCouleur+"%d.png"%i for i in 1,2,3,4,5,6,6,8,9 ]
+                self.nomImages = [ nomCouleur+"%d.png"%i for i in (1,2,3,4,5,6,6,8,9) ]
                 
                 self.nomImages += [ nomCouleur+"nage%d.png"%i for i in xrange(1,7) ]
         
-                images_petit   = [ [ charge_image( imgName, flip=flip ) for imgName in self.nomImages ] for flip in False, True ]
+                images_petit   = [ [ charge_image( imgName, flip=flip ) for imgName in self.nomImages ] for flip in (False, True) ]
         
                 SequenceImgGrand = range(1,10)
                 self.toutes_images = [ [ images_petit ], [] ]
@@ -830,7 +833,7 @@ class Perso(Dessinable,Personnage):
     
                     nomImagesGrand += [ "cocomoyen.png", racine+"-tire.png"]
                     
-                    images_grand = [ [ charge_image(img,flip=flip) for img in nomImagesGrand ] for flip in False, True ]
+                    images_grand = [ [ charge_image(img,flip=flip) for img in nomImagesGrand ] for flip in (False, True) ]
                    
                     self.toutes_images[1].append(images_grand)
                         
@@ -838,9 +841,9 @@ class Perso(Dessinable,Personnage):
         else:
             # mario
             
-            nomImagesKamea = [ "mario-tire-kamea%d.png"%i for i in 1,2,3,4,5 ]
+            nomImagesKamea = [ "mario-tire-kamea%d.png"%i for i in (1,2,3,4,5) ]
 
-            self.images_kamea = [ [ charge_image( img, flip=flip ) for img in nomImagesKamea ] for flip in False, True ]
+            self.images_kamea = [ [ charge_image( img, flip=flip ) for img in nomImagesKamea ] for flip in (False, True) ]
             
             self.toutes_images = []
 
@@ -868,7 +871,7 @@ class Perso(Dessinable,Personnage):
                     elif coul_num == 0:
                         self.nomImages = nomImages
 
-                    imgs = [ [ charge_image( nomImg, flip=flip ) for nomImg in nomImages ] for flip in False, True ]
+                    imgs = [ [ charge_image( nomImg, flip=flip ) for nomImg in nomImages ] for flip in (False, True) ]
 
                     self.toutes_images[taille][coul_num] = imgs
                         
@@ -1567,8 +1570,8 @@ class PersoNonJoueur(Perso):
         self.oisif      = 20
         if random.randint(0,1):
             # Fille
-            nomImages = [ "Aurorepetite%d.png"%i for i in 1,2 ] * 4
-            self.toutes_images = [ [ [ [ charge_image( imgName, flip=flip ) for imgName in nomImages ] for flip in False, True ] ] ]
+            nomImages = [ "Aurorepetite%d.png"%i for i in (1,2) ] * 4
+            self.toutes_images = [ [ [ [ charge_image( imgName, flip=flip ) for imgName in nomImages ] for flip in (False, True) ] ] ]
             self.rect   = self.toutes_images[0][0][0][0].get_rect()
             
     def ActionInCamera(self, joueur, camera):
@@ -1614,7 +1617,7 @@ class Princesse(AutoMobile,Personnage):
     
     penetrable = True, True, False, True, True
     
-    nomImages = ["aurore%d.png"%i for i in 1,2]
+    nomImages = ["aurore%d.png"%i for i in (1,2)]
 
     def __init__( self, pos=None ):
         Dessinable.__init__( self, pos )
@@ -1669,7 +1672,7 @@ class Figurant( Dessinable, Personnage ):
     
     penetrable = True, True, False, True, True
     
-    nomImages = ['Perso/Vincent%d.png'%i for i in 1,2]
+    nomImages = ['Perso/Vincent%d.png'%i for i in (1,2)]
 
     def __init__( self, pos=None ):
         Dessinable.__init__( self, pos )
@@ -1686,7 +1689,7 @@ class Figurant( Dessinable, Personnage ):
     @nom_.setter
     def nom_( self, val ):
         self._nom = val
-        nomImages = [ 'Perso/%s%d.png'%(val,i) for i in 1,2 ]
+        nomImages = [ 'Perso/%s%d.png'%(val,i) for i in (1,2) ]
         self.set_images(nomImages)
 
         self.image = self.images[self._vers_gauche][0]
@@ -1765,7 +1768,7 @@ class Bulle(Flotant):
 
 class FleurDeFeu(Collidable):
     """fleur qui donne le pouvoir des boulettes de feu"""
-    nomImages   = ["fireflower%d.png"%i for i in 1,2,3,4]
+    nomImages   = ["fireflower%d.png"%i for i in (1,2,3,4)]
     freq        = 6
     points      = 1000
             
@@ -1791,8 +1794,8 @@ class Chapeau(Collidable):
         #joueur.Controle.Reset()
         #joueur.auto_pilote = True    
         #joueur.Controle.Droite = 100
-        imgs = [ "Cocopingouin%d.png"%i for i in 1,2,3,4,5,6,7 ]
-        imgs = [ [ charge_image( img, flip=flip ) for img in imgs ] for flip in False, True ]
+        imgs = [ "Cocopingouin%d.png"%i for i in (1,2,3,4,5,6,7) ]
+        imgs = [ [ charge_image( img, flip=flip ) for img in imgs ] for flip in (False, True) ]
         joueur.toutes_images[joueur.taille][joueur.couleur] = imgs
         joueur.enTransformation = joueur.temps_transfo
         joueur.invincible = True
@@ -1804,7 +1807,7 @@ class Chapeau(Collidable):
         
 class Bague( Collidable ):
     
-    nomImages = ["bague%d.png"%i for i in 1,2,3,4,5 ]
+    nomImages = ["bague%d.png"%i for i in (1,2,3,4,5) ]
     points    = 10000
     freq      = 16
      
@@ -1848,7 +1851,7 @@ class CoeurMultiColore(Flotant, SurpriseMouvante):
     
     images_synchro = False
     
-    nomImages = [ "Coeur%d.png"%i for i in 1,2,3,4,5,6,7 ]
+    nomImages = [ "Coeur%d.png"%i for i in (1,2,3,4,5,6,7) ]
     gravite   = .1
     v_Y_max   = 3
     impulsionY= 6
@@ -1906,7 +1909,7 @@ class Coeur( CoeurMultiColore ):
 
 
 class CoeurPiece(CoeurMultiColore):
-    nomImages = ["Coeurpiece%d.png"%i for i in 1,2,3]
+    nomImages = ["Coeurpiece%d.png"%i for i in (1,2,3)]
 
 
 class Choppe(SurpriseMouvante, FleurDeFeu, AutoMobile):
@@ -1956,7 +1959,7 @@ class CocoNinja(Collidable):
 class Etoile(SurpriseMouvante, AutoMobile):
 
     penetrable  = True, True, False, True, False
-    nomImages   = ["etoile%s.png" % i for i in 1,2,3,4]
+    nomImages   = ["etoile%s.png" % i for i in (1,2,3,4)]
     points      = 1000
     impulsionY  = 7
     impulsionX  = 2
@@ -1992,7 +1995,7 @@ class ChampiVert(SurpriseMouvante, AutoMobile):
 
 class ChampiCoco(ChampiVert):
     
-    nomImages  = ["mushroomcoco%d.png"%i for i in 1,2,3,4,5,6]
+    nomImages  = ["mushroomcoco%d.png"%i for i in (1,2,3,4,5,6)]
     impulsionY = 6
     impulsionX = 0
     rebond     = True
@@ -2033,7 +2036,7 @@ class ChampiCoco(ChampiVert):
                     
 class ExploBoulette(Dessinable):
     
-    nomImages = ["exploboulette%d.png" % i for i in 1,2,3]
+    nomImages = ["exploboulette%d.png" % i for i in (1,2,3)]
     duree_detonation = 6
     
     def __init__(self, pos=None):
@@ -2077,7 +2080,7 @@ class FeuDArtifice(ExploBoulette):
 
 class ExploFiente(ExploBoulette):
     
-    nomImages = ["fiente_explo%d.png" % i for i in 1,2,3]
+    nomImages = ["fiente_explo%d.png" % i for i in (1,2,3)]
     
 
 class Panneau( Dessinable ):
@@ -2143,7 +2146,7 @@ class Panneau( Dessinable ):
         
         for img, destRect, pos in ( self.image1_, cadreRect1, pos1 ), (self.image2_, cadreRect2, pos2):
             if self.compteur <= self.vitesse_defilement_ and False:
-                print 'Rects', destRect, cadreRect, self.cadre
+                print('Rects', destRect, cadreRect, self.cadre)
             if destRect.h:
                 img = charge_image('photos/'+img)
                 img = pygame.transform.scale(img, self.cadre)
@@ -2463,7 +2466,7 @@ class PlatformeBiseau(BlocBase):
     nomImages  = ["platform-biseau.png"]
  
 class PlatformeQ(Ebranlable, BlocBase):
-    nomImages        = ["platform-q%s.png" % i for i in 1,2,3]
+    nomImages        = ["platform-q%s.png" % i for i in (1,2,3)]
     freq = 39
     
     
@@ -2494,18 +2497,18 @@ class PlatformeQ(Ebranlable, BlocBase):
             self._penetrable = list(self.penetrable)
         else:
             self._penetrable = [ True, True, False, True, False ]
-            print self.penetrable_haut_
-            print self.penetrable_droite_
-            print self.penetrable_bas_
-            print self.penetrable_gauche_
-            print self.penetrable_traverse_
+            print(self.penetrable_haut_)
+            print(self.penetrable_droite_)
+            print(self.penetrable_bas_)
+            print(self.penetrable_gauche_)
+            print(self.penetrable_traverse_)
 
     def ActionInCamera( self, joueur, camera ):
         self.rafraichit_image()
         self.declenche_maj()        
         
 class PlatformeQRouge(PlatformeQ):
-    nomImages = ["platformcoco-q%s.png" % i for i in 1,2,3]
+    nomImages = ["platformcoco-q%s.png" % i for i in (1,2,3)]
  
 class Briques(PlatformeBriques):
     nomImages = [ "briques.png" ]    
@@ -2999,7 +3002,7 @@ class Lave(Collidable):
             
 class Tremplin(Collidable):
     
-    nomImages = [ "spring%d.png"%i for i in 1,2,3 ]
+    nomImages = [ "spring%d.png"%i for i in (1,2,3) ]
     
     penetrable = False, True, False, True, False
     
@@ -3163,7 +3166,7 @@ class Boulette(Collidable):
 class BouleDeFeu(Collidable):
     """ Enorme boule de feu """
     
-    nomImages = [ 'bouledefeu%d.png'%i for i in 1,2 ]
+    nomImages = [ 'bouledefeu%d.png'%i for i in (1,2) ]
     son_flame = "flame.wav"
     gravite = None
     
@@ -3204,7 +3207,7 @@ class BouleDeFeu(Collidable):
     
 class FleurCarnivore(Collidable,Intouchable,EnemiInterface):
     
-    nomImages   = ["flower%d.png" % i for i in 1,2]
+    nomImages   = ["flower%d.png" % i for i in (1,2)]
     freq        = 12
     gravite     = 0
     
@@ -3450,7 +3453,7 @@ class EcureuilNuageux( Sautable, Mechant, AllerRetourable ):
     """Ecureuil qui balance des crabes depuis son nuage"""
     
     gravite = None
-    nomImages = [ 'ecureuil%d.png'%i for i in 1,2,3,4 ]
+    nomImages = [ 'ecureuil%d.png'%i for i in (1,2,3,4) ]
 
     affiche = AllerRetourable.affiche
         
@@ -3581,7 +3584,7 @@ class Oisson( Mechant, BeteAquatique ):
     ''' Oiseau-poisson '''
     
     #penetrable = True, True, True, True, True
-    nomImages = ["oisson%d.png" % i for i in 1,2]
+    nomImages = ["oisson%d.png" % i for i in (1,2)]
     gravite = None
     freq = 40
     
@@ -3602,13 +3605,13 @@ class Oisson( Mechant, BeteAquatique ):
         Mechant.maj(self)
 
 class OissonGris( Oisson ):
-    nomImages = ["oisson-gris%d.png" % i for i in 1,2]
+    nomImages = ["oisson-gris%d.png" % i for i in (1,2)]
            
 class Calmar( Mechant, BeteAquatique ):
 
     gravite = None
     
-    nomImages = ["calamar%d.png" % i for i in 1,2]
+    nomImages = ["calamar%d.png" % i for i in (1,2)]
 
     freq  = 12
 
@@ -3664,8 +3667,8 @@ class Calmar( Mechant, BeteAquatique ):
 class Pigeon( Sautable, Mechant ):
     """ pigeon des villes """
     
-    nomImagesVol = ["pigeon%d.png" % i for i in 1,2]
-    nomImages    = ["pigeonmarche%d.png" % i for i in 1,2]
+    nomImagesVol = ["pigeon%d.png" % i for i in (1,2)]
+    nomImages    = ["pigeonmarche%d.png" % i for i in (1,2)]
     
     v_X = 1
     
@@ -3768,7 +3771,7 @@ class Pigeon( Sautable, Mechant ):
         
         Mechant.tue(self,side=side,points=points)
         
-        explo = ["pigeonexplose%d.png" % i for i in 1,2]
+        explo = ["pigeonexplose%d.png" % i for i in (1,2)]
         anim = Animation(pos=None,images=explo, durees = [10,20], vers_gauche=self._vers_gauche )        
         anim.rect.center = self.rect.center
         anim.deplace()
@@ -3870,7 +3873,7 @@ class Carapace( AutoMobile, Sautable, EnemiInterface ):
         
         if self.speed[0]:
                         
-            if isinstance( sprite, (Carapace,) ):
+            if isinstance( sprite, Carapace ):
                 self.son_tape.play()
                 sprite.tue()
                 self.tue()
@@ -3964,11 +3967,11 @@ class TortueAiles( AllerRetourable, Sautable, Mechant ):
 
 class TortueRougeAiles( TortueAiles ):
     ''' tortue ailee qui perd ses ailes lorsqu'on lui saute dessus. '''
-    nomImages = ["monster-red%d-aile.png" % i for i in 1,2]
+    nomImages = ["monster-red%d-aile.png" % i for i in (1,2)]
 
 class Slub( Sautable, Mechant ):
     
-    nomImages = ["slub%d.png" % i for i in 1,2]
+    nomImages = ["slub%d.png" % i for i in (1,2)]
     
     v_X = -1
         
@@ -3983,17 +3986,17 @@ class Slub( Sautable, Mechant ):
 
 
 class Crane( Sautable, Mechant ):
-    nomImages = ["crane%d.png" % i for i in 1,2]
+    nomImages = ["crane%d.png" % i for i in (1,2)]
     carcasse = "crane3.png"
     
 class TeteDeMort( Sautable, Mechant ):
-    nomImages = ["tetedemort%d.png" % i for i in 1,2,3,4]
+    nomImages = ["tetedemort%d.png" % i for i in (1,2,3,4)]
     carcasse = "tetedemort5.png"
 
 
 class RatNoir( Sautable, Mechant ):
 
-    nomImages = ["rat%d.png" % i for i in 1,2]
+    nomImages = ["rat%d.png" % i for i in (1,2)]
     points = 100
     v_X = 3
     
@@ -4003,7 +4006,7 @@ class RatNoir( Sautable, Mechant ):
             
 class Crabe( Mechant ):
 
-    nomImages = ["crabe%d.png" % i for i in 1,2,3]
+    nomImages = ["crabe%d.png" % i for i in (1,2,3)]
     carcasse  = 'crabe4.png'
 
     v_X = -2
@@ -4011,13 +4014,13 @@ class Crabe( Mechant ):
     
 class Herisson( Mechant ):
     
-    nomImages = ['herisson%d.png'%i for i in 1,2]
-    capsule = ['herisson%d.png'%i for i in 3,4]
+    nomImages = ['herisson%d.png'%i for i in (1,2)]
+    capsule = ['herisson%d.png'%i for i in (3,4)]
 
 
 class Squidge( Sautable, Mechant ):
     
-    nomImages           = ["squidge%d.png" % i for i in 1,2]
+    nomImages           = ["squidge%d.png" % i for i in (1,2)]
     nomImages_boom      = ["squidge2.png", "squidge3.png", "exp1.png", "exp2.png", "exp3.png"] 
 
     freq = 12
@@ -4190,7 +4193,7 @@ class BouletDeCanon(Sautable, CollidableBloc):
 
             
 class Piece(Collidable):
-    nomImages = ["piece%s.png" % i for i in 1,2,3]
+    nomImages = ["piece%s.png" % i for i in (1,2,3)]
     
     points = 200
     freq  = 20
@@ -4219,11 +4222,11 @@ class Piece(Collidable):
         joueur.points += self.points
     
 class PieceBleue(Piece):
-    nomImages = ["piece-bleu%s.png" % i for i in 1,2,3]
+    nomImages = ["piece-bleu%s.png" % i for i in (1,2,3)]
 
 class PiecePrise(Dessinable):
 
-    nomImages = ["coin%s.png" % i for i in 1,2,3,4]
+    nomImages = ["coin%s.png" % i for i in (1,2,3,4)]
     points = 200
     
     def __init__(self, pos=None):

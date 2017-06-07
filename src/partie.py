@@ -1,22 +1,24 @@
 #! /usr/bin/env python
 
+from __future__ import print_function
+from __future__ import absolute_import
 import sys
 
 import pygame
 from pygame.locals import *
 import traceback
-import crible
-import intercalaires
-import media
-import elems
-import ordonnet
-from elems import Perso, ControlePerso
+from . import crible
+from . import intercalaires
+from . import media
+from . import elems
+from . import ordonnet
+from .elems import Perso, ControlePerso
 import random
-import langues
+from . import langues
 
-from interruptions import MortJoueur, TransferMonde, InterruptionDePartie
+from .interruptions import MortJoueur, TransferMonde, InterruptionDePartie
 
-import niveau
+from . import niveau
 
 def GetEcran( PleinEcran ):
     
@@ -147,7 +149,7 @@ class Partie(object):
         self.police       = pygame.font.Font(media.cheminFichier("fonts/font.ttf"), 16*self.ecranH / self.TailleEcran[0])
         elems.Legende.font = pygame.font.Font(media.cheminFichier("fonts/font.ttf"), 10)
                 
-        self.mini_pieces = [ media.charge_image('piecette%d.png'%i) for i in 1,3,2,1,1 ]
+        self.mini_pieces = [ media.charge_image('piecette%d.png'%i) for i in (1,3,2,1,1) ]
         
         self.tempsBoucleMs = 60 #millisecondes
     
@@ -163,7 +165,7 @@ class Partie(object):
         rectMin = pygame.Rect((0,0), self.TailleEcran)
         
         if self.niveau.parallaxe_:
-            print 'taille image_fond', self.niveau._image_fond.get_size()
+            print('taille image_fond', self.niveau._image_fond.get_size())
             fondH = self.niveau._image_fond.get_height()
             if fondH > self.TailleEcran[1]:
                 rectMin.h = fondH
@@ -178,16 +180,16 @@ class Partie(object):
         self.camera.SetRectMonde(rect)
         
         if self.affiche_stats:
-            print 'Dimensions du Monde', self.niveau.nom, self.camera.rect_monde
+            print('Dimensions du Monde', self.niveau.nom, self.camera.rect_monde)
             for elem in self.niveau.Elements:
                 if elem.rect.left <= self.camera.rect_monde.left:
-                    print 'Gauche', elem
+                    print('Gauche', elem)
                 elif elem.rect.right >= self.camera.rect_monde.right:
-                    print 'Droite', elem
+                    print('Droite', elem)
                 elif elem.rect.bottom >= self.camera.rect_monde.bottom:
                     pass#print 'Bas', elem
                 elif elem.rect.top <= self.camera.rect_monde.top:
-                    print 'Haut', elem
+                    print('Haut', elem)
                     
     def boucle(self, nom_niveau):
         
@@ -238,7 +240,7 @@ class Partie(object):
                 self.Intro_Niveau()
                 
             except InterruptionDePartie:
-                print "Partie interrompue par le joueur"
+                print("Partie interrompue par le joueur")
                 return 
             
     def Intro_Niveau(self,affiche=True):
@@ -278,8 +280,8 @@ class Partie(object):
                 except intercalaires.SautePlanche:
                     break
                 
-                except media.MediaManquantExc, exc:
-                    print exc
+                except media.MediaManquantExc as exc:
+                    print(exc)
                     
             if Cococouda:
                 sonCocoCouda.stop()
@@ -399,7 +401,7 @@ class Partie(object):
                 elem.affiche(ecran, self.camera)
             except:
                 traceback.print_exc()
-                print elem, elem.rect
+                print(elem, elem.rect)
                 
     def Boucle_Niveau(self):
         
@@ -470,10 +472,10 @@ class Partie(object):
                                 s.hors_champ = True
 
                 
-                except MortJoueur, exc:
+                except MortJoueur as exc:
                     MortJoueurExc = exc
                                               
-                except TransferMonde, exc:
+                except TransferMonde as exc:
                     
                     transferMondeExc = exc
                     media.arret_musique()
@@ -512,7 +514,7 @@ class Partie(object):
                                 # Attend la fin de la musiquette pour passer au monde suivant
                                 raise transferMondeExc
                             else:
-                                print 'Attente de la fin de la musiquette'
+                                print('Attente de la fin de la musiquette')
                             
                     else:
                         # Compte a rebours negatif en attendant de passer au niveau suivant.
@@ -711,8 +713,8 @@ class Partie(object):
                     #elems.ControlePerso.BoutonA_joy = 3
                     elems.ControlePerso.BoutonB_joy = 2
                     
-                    print 'BoutonA', elems.ControlePerso.BoutonA_joy
-                    print 'BoutonB', elems.ControlePerso.BoutonB_joy
+                    print('BoutonA', elems.ControlePerso.BoutonA_joy)
+                    print('BoutonB', elems.ControlePerso.BoutonB_joy)
                                 
                                                                
             elif e.type == pygame.JOYBUTTONDOWN:
@@ -800,7 +802,7 @@ class Partie(object):
         else:
             # vers fichier
             import os
-            import sauvegarde
+            from . import sauvegarde
             
             Cliche_REP = media.cheminFichier('cliches', verifExiste=False) 
             if not os.path.exists(Cliche_REP):
@@ -812,5 +814,5 @@ class Partie(object):
             
             if NomFichier:
                 NomComplet = os.path.join(Cliche_REP,NomFichier+'.png')
-                print "sauvegarde d'ecran : %s"%NomComplet
+                print("sauvegarde d'ecran : %s"%NomComplet)
                 pygame.image.save( Surface, NomComplet )

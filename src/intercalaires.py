@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 import pygame, sys
 from pygame.locals import *
-from media import cheminFichier, charge_image
+from .media import cheminFichier, charge_image
 
 
 class SautePlanche( Exception ):
