@@ -1,0 +1,17 @@
+Jeu inspiré par le Super Mario d'origine, créé à l'occasion du mariage de notre frère (Coco)
+
+Le premier niveau reproduit le jeu d'origine puis ça prend la tangente.
+
+Graphismes sur mesure par Vince.
+
+Nécessite l'installation de python (écrit avec la version 2.7) et pygame (www.pygame.org). 
+NB : les noms de classes, méthode et variable sont largement en français.
+Musique et effet sonores trouvé sur youtube, nous voudrions bien rendre les honneurs aux compositeurs.
+Veuillez vous manifester si vous en connaissez l'auteur (ou que votre morceau n'est pas libre de droits)!
+
+Si vous avez une manette de jeu, branchez-là, ça devrait marcher tout seul.
+Sinon, utilisez les flèches du clavier pour la direction, x et c pour le saut et la course.
+
+supercoco.py lance le jeu
+
+Amusez-vous bien !
