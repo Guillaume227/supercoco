@@ -135,17 +135,17 @@ class SonP( pygame.mixer.Sound ):
     def __reduce__(self):
         return SonP, (self.fileName, self.volume)
     
-    '''
+    """
     def __getnewargs__(self):
         return self.fileName, self.volume
-    '''
+    """
     def __getstate__(self):
         return dict( fileName = self.fileName, volume = self.volume, __safe_for_unpickling__=True )
-    '''
+    """
     def __setstate__(self,Dict):
         self.__init__( **Dict )
         
-    '''
+    """
 
 
 def charge_fonte_no_cache(nomFichier, taille=16):

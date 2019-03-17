@@ -287,7 +287,7 @@ class InterfaceDeroulant(object):
                         
                         numChamps = len(self.champs)
                         
-                        for index in xrange(1, numChamps):
+                        for index in range(1, numChamps):
                             
                             indexMod = ( self.selection_index[-1] + index ) % numChamps
                             

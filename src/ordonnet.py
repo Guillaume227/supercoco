@@ -1,8 +1,8 @@
-'''
+"""
 Created on 2 Jun 2012
 
 @author: Zarastro
-'''
+"""
 from __future__ import print_function
 
 class Ordonnet( object ):

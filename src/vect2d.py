@@ -16,7 +16,7 @@ def Rot( rad, Arron=3 ):
     return Rotateur
 
 class Rectang:
-    ''' GrandCote / PetitCote = 2.'''
+    """ GrandCote / PetitCote = 2."""
     
     def __init__(self, Centre, Orient, GrandCote):
         
@@ -57,7 +57,7 @@ class Rectang:
                 return True # Faux - A continuer
 
 class Vec(list):
-    '''Vecteur en deux dimensions '''
+    """Vecteur en deux dimensions """
      
     def __init__(self, *args):
         lenarg = len(args)
@@ -85,20 +85,20 @@ class Vec(list):
     def nor2(self): return self[0]**2 + self[1]**2
     
     def unite(self, Long=1.):
-        ''' Vecteur unite ou de longueur specifie '''
+        """ Vecteur unite ou de longueur specifie """
         fact = Long/self.nor
         return type(self)(self[0]*fact, self[1]*fact)
  
     def tr(self):
-        '''transpose'''
+        """transpose"""
         return type(self)(self[1], self[0]) 
 
     def itr(self):
-        '''transpose'''
+        """transpose"""
         self[0], self[1] = self[1], self[0] 
  
     def normale(self):
-        '''normale suivant une rotation directe'''
+        """normale suivant une rotation directe"""
         return type(self)(self[1], -self[0]) 
     
     def Angle( self, vec2, angle):
@@ -120,7 +120,7 @@ class Vec(list):
     def __rsub__(self, other): return type(self)(other[0] - self[0], other[1] - self[1])
  
     def __mul__(self, a):
-        ''' produit scalaire ou par un scalaire '''
+        """ produit scalaire ou par un scalaire """
         if isinstance( a, (int,float) ):
             return type(self)(self[0] * a, self[1] * a)
         else:
@@ -129,7 +129,7 @@ class Vec(list):
     def __rmul__(self, a):  return self[0] * a, self[1] * a
     
     def __div__(self, a):
-        ''' division par un scalaire '''    
+        """ division par un scalaire """
         return type(self)(self[0] / a, self[1] / a)
     
     def __rdiv__(self, a):  return self[0] / a, self[1] / a
@@ -185,7 +185,7 @@ class Vec(list):
         return self
  
     def __xor__(self, other): 
-        ''' produit vectoriel '''
+        """ produit vectoriel """
         return self[0]*other[1] - self[1]*other[0]
  
     def __pow__(self, other): return  self[0] ** other, self[1] ** other
@@ -216,13 +216,13 @@ class Vec(list):
  
  
 def pp( arg, noReturn=True, indent=0 ):
-    ''' pretty printing '''
+    """ pretty printing """
  
     Indentation = ' '*indent
-    '''
+    """
     if isinstance( arg, datetime.date ):
         out =  Indentation + arg.strftime('%a %d %b %y')
-    '''
+    """
     if isinstance( arg, ( list, set, tuple ) ):
  
         if isinstance( arg, set ):

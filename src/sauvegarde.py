@@ -1,8 +1,8 @@
-'''
+"""
 Created on 16 Aug 2012
 
 @author: Zarastro
-'''
+"""
 from __future__ import print_function
 from __future__ import absolute_import
 
