@@ -138,6 +138,7 @@ class Partie(object):
         self.pas_a_pas = None
 
         self.crible = None
+        self.compte_a_rebours = 0
 
         self._sauvegarde_possible = True
 
@@ -344,7 +345,7 @@ class Partie(object):
             self.perso = Perso((0, 0))
 
         self.perso.nom = self.niveau.nomJoueur_
-        if self.niveau.etat_joueur_ is not None:
+        if self.niveau.etat_joueur_ is not None and self.niveau.etat_joueur_ != '':
             self.perso.etat = self.niveau.etat_joueur_
 
         self.RetailleMonde()
@@ -406,9 +407,9 @@ class Partie(object):
     def Boucle_Niveau(self):
 
         avertissement = self.niveau.tempsMax_ <= 100
-        transferMondeExc = None
+        transfer_monde_exc = None
         son_decompte = media.charge_son("decompte.ogg")
-        MortJoueurExc = None
+        mort_joueur_exc = None
 
         pygame.event.clear()
 
@@ -470,13 +471,12 @@ class Partie(object):
                                 s.horschamp(self.perso, self.camera)
                                 s.hors_champ = True
 
-
                 except MortJoueur as exc:
-                    MortJoueurExc = exc
+                    mort_joueur_exc = exc
 
                 except TransferMonde as exc:
 
-                    transferMondeExc = exc
+                    transfer_monde_exc = exc
                     media.arret_musique()
 
                     # Pas de decompte pour les sous-niveaux
@@ -507,11 +507,11 @@ class Partie(object):
 
                     elif self.compte_a_rebours <= -20:
 
-                        if transferMondeExc:
+                        if transfer_monde_exc:
 
                             if not pygame.mixer.get_busy():
                                 # Attend la fin de la musiquette pour passer au monde suivant
-                                raise transferMondeExc
+                                raise transfer_monde_exc
                             else:
                                 print('Attente de la fin de la musiquette')
 
@@ -593,9 +593,9 @@ class Partie(object):
 
             pygame.display.flip()
 
-            if MortJoueurExc:
+            if mort_joueur_exc:
                 # permet l'affichage de la derniere toile avant le gel de la mise a jour
-                raise MortJoueurExc
+                raise mort_joueur_exc
 
     def affiche_texte(self, texte, pos, centre=(True, True), couleur=(255, 255, 255)):
         """affiche du texte a l'ecran"""
@@ -683,8 +683,11 @@ class Partie(object):
                     raise InterruptionDePartie
 
                 elif key == K_e:
-
                     self.plein_ecran = not self.plein_ecran
+
+                elif key == K_i:
+                    self.perso.invincible = not self.perso.invincible
+                    print('perso invincible:', self.perso.invincible)
 
                 elif key in (ControlePerso.BoutonA_key, ControlePerso.BoutonB_key):
                     if not self.EnPause and not self.phase_decompte:
@@ -712,7 +715,6 @@ class Partie(object):
                     print('BoutonA', elems.ControlePerso.BoutonA_joy)
                     print('BoutonB', elems.ControlePerso.BoutonB_joy)
 
-
             elif e.type == pygame.JOYBUTTONDOWN:
                 if not self.EnPause and e.button == ControlePerso.BoutonA_joy:
                     # Saut du perso joueur
@@ -727,7 +729,6 @@ class Partie(object):
 
                 else:
                     pass
-                    # print 'bouton manette', e.button
 
     def OrdonneElems(self, Elems):
         return sorted(Elems, key=self.elems.index)

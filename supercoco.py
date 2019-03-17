@@ -21,8 +21,12 @@ def main(PleinEcran=False):
             pygame.display.set_icon(pygame.image.load("media/coco.ico"))
         except:
             print("echec d'affichage de l'icone")
-        
+
         pygame.joystick.init()
+        if pygame.joystick.get_count() > 0:
+            pygame.joystick.Joystick(0).init()
+            print(f'{pygame.joystick.get_count()} manette(s) disponible(s)')
+
         pygame.mouse.set_visible(0)
         
         pagedegarde.Menu(pleinEcran=PleinEcran)

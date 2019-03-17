@@ -67,25 +67,25 @@ class Menu(object):
                     [langues.Traduc(langues.MENU_Change_Langue), self.ChangeLangue],
                     [langues.Traduc(langues.MENU_Quiter), sys.exit], ]
 
-        Menu = menu.MenuOptions(next(zip(*options)), pos=(ecran.get_size()[0] / 2, 360), centre=True)
+        init_menu = menu.MenuOptions(next(zip(*options)), pos=(ecran.get_size()[0] / 2, 360), centre=True)
 
         if partie.Partie.Ombre:
-            Menu.couleur_texte_selec = (0, 0, 0)
-            Menu.couleur_texte = (150, 0, 0)
+            init_menu.couleur_texte_selec = (0, 0, 0)
+            init_menu.couleur_texte = (150, 0, 0)
         else:
-            Menu.couleur_texte_selec = (255, 0, 0)
-            Menu.couleur_texte = (255, 255, 255)
+            init_menu.couleur_texte_selec = (255, 0, 0)
+            init_menu.couleur_texte = (255, 255, 255)
 
-        return Menu, options
+        return init_menu, options
 
     def boucle(self):
 
-        Menu, options = self.InitMenuOptions()
+        init_menu, options = self.InitMenuOptions()
 
         while True:
 
             try:
-                indexOption = Menu.boucle(self.actions)
+                indexOption = init_menu.boucle(self.actions)
                 if indexOption is None:
                     break
                 else:
@@ -95,7 +95,7 @@ class Menu(object):
                 return
 
             except ChangeLangueExc:
-                Menu, options = self.InitMenuOptions()
+                init_menu, options = self.InitMenuOptions()
 
             except intercalaires.SautePlanche:
                 pass
@@ -104,24 +104,24 @@ class Menu(object):
                 traceback.print_exc()
                 break
 
-    def AllerAuNiveau(self, Niveau=None, ModeModifs=False):
+    def aller_au_niveau(self, Niveau=None, ModeModifs=False):
 
         if Niveau:
-            self.LancerPartie(Niveau, ModeModifs=ModeModifs)
+            self.LancerPartie(Niveau, mode_modifs=ModeModifs)
 
-    def LancerPartieAvecPhotos(self, Niveau='1-1', ModeModifs=False):
-        self.LancerPartie(Niveau, ModeModifs, AvecPhotos=True)
+    def lancer_partie_avec_photos(self, niveau='1-1', mode_modifs=False):
+        self.LancerPartie(niveau=niveau, mode_modifs=mode_modifs, avec_photos=True)
 
-    def LancerPartie(self, Niveau='1-1', ModeModifs=False, AvecPhotos=False):
+    def LancerPartie(self, niveau='1-1', mode_modifs=False, avec_photos=False):
 
         Partie = partie.Partie()
 
-        Partie.avec_photos = AvecPhotos
+        Partie.avec_photos = avec_photos
 
-        if ModeModifs:
+        if mode_modifs:
             Partie.SetModeModifs()
 
-        Partie.boucle(Niveau)
+        Partie.boucle(niveau)
 
         self._plein_ecran = Partie.plein_ecran
 

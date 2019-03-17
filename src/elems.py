@@ -39,20 +39,20 @@ def TriChocsFunc(mid):
             return args[0][1] - args[1][1]
 
         else:
-            Dists = []
+            dists = []
 
             for i in 0, 1:
 
                 if mid > args[i][2].rect.right:
-                    Dists.append(mid - args[i][2].rect.right)
+                    dists.append(mid - args[i][2].rect.right)
 
                 elif mid < args[i][2].rect.left:
-                    Dists.append(args[i][2].rect.left - mid)
+                    dists.append(args[i][2].rect.left - mid)
 
                 else:
-                    Dists.append(0)
+                    dists.append(0)
 
-            return Dists[0] - Dists[1]
+            return dists[0] - dists[1]
 
     return f
 
@@ -258,32 +258,32 @@ class Dessinable(object):
 
     def mouve(self, collision=True):
 
-        vX, vY = deplacement = tuple(self.speed + self.vitesse_base)
+        v_x, v_y = deplacement = tuple(self.speed + self.vitesse_base)
 
-        ChocsBySide = {}
+        chocs_by_side = {}
 
         if not collision:
             self.rect.move_ip(*deplacement)
 
         else:
 
-            MouvRect = self.rect.union(self.rect.move(*deplacement))
+            mouv_rect = self.rect.union(self.rect.move(*deplacement))
 
-            obstacles = self._crible.Intersecte(MouvRect, self)
+            obstacles = self._crible.Intersecte(mouv_rect, self)
 
-            if abs(vX) >= abs(vY):
-                if vY:
-                    OrdreIndex = 0, 1
+            if abs(v_x) >= abs(v_y):
+                if v_y:
+                    ordre_index = 0, 1
                 else:
-                    OrdreIndex = 0,
+                    ordre_index = 0,
 
             else:
-                if vX:
-                    OrdreIndex = 1, 0
+                if v_x:
+                    ordre_index = 1, 0
                 else:
-                    OrdreIndex = 1,
+                    ordre_index = 1,
 
-            for Index in OrdreIndex:
+            for Index in ordre_index:
 
                 mouv = [0, 0]
                 mouv[Index] = deplacement[Index]
@@ -291,35 +291,36 @@ class Dessinable(object):
 
                 if collision and obstacles:
 
-                    sides = list(ChocsBySide.keys())
+                    sides = list(chocs_by_side.keys())
                     for side in sides:
 
                         # Trie les chocs dans l'ordre des premiers touches
                         if side != TRAVERSE:
-                            ChocsBySide.pop(side)
+                            chocs_by_side.pop(side)
 
-                    Chocs = tuple(obstacle.collisione(mouv, self.rect) for obstacle in obstacles if
+                    chocs = tuple(obstacle.collisione(mouv, self.rect) for obstacle in obstacles if
                                   obstacle._penetrable and self.rect.colliderect(obstacle.rect))
-                    [ChocsBySide.setdefault(Choc[0], []).append(Choc[1:]) for Choc in Chocs if Choc is not None]
+                    [chocs_by_side.setdefault(choc[0], []).append(choc[1:]) for choc in chocs if choc is not None]
 
-                    NumChocs = len(ChocsBySide)
+                    num_chocs = len(chocs_by_side)
 
                     # Deux rectangles precedement disjoints ne peuvent
                     # s'intersecter par plus de deux cotes au cours d'un deplacement
-                    assert NumChocs <= 1 or (NumChocs == 2 and TRAVERSE in ChocsBySide)
+                    assert num_chocs <= 1 or (num_chocs == 2 and TRAVERSE in chocs_by_side)
 
-                    for side, chocs in ChocsBySide.items():
+                    for side, chocs in chocs_by_side.items():
 
                         if side in (BAS, HAUT):
                             chocs = sorted(chocs, key=functools.cmp_to_key(TriChocsFunc(self.rect.centerx)))
 
                         elif side == TRAVERSE:
-                            chocs = ChocsBySide[side]
+                            chocs = chocs_by_side[side]
 
                         else:
                             # DROITE, GAUCHE
                             print('chocs', chocs)
-                            chocs = sorted(chocs)
+                            # TODO: sort chocs with right comparison func
+                            #chocs = sorted(chocs)
 
                         for _dist, penetrable, obj in chocs:
 
@@ -362,14 +363,14 @@ class Dessinable(object):
                                     else:
                                         tolX = 1
 
-                                    distGauche = obj.rect.right - self.rect.left
-                                    distDroite = obj.rect.left - self.rect.right
+                                    dist_gauche = obj.rect.right - self.rect.left
+                                    dist_droite = obj.rect.left - self.rect.right
 
-                                    if distGauche <= tolX:
-                                        self.rect.move_ip((distGauche, 0))
+                                    if dist_gauche <= tolX:
+                                        self.rect.move_ip((dist_gauche, 0))
                                         continue
-                                    elif distDroite >= -tolX:
-                                        self.rect.move_ip((distDroite, 0))
+                                    elif dist_droite >= -tolX:
+                                        self.rect.move_ip((dist_droite, 0))
                                         continue
 
                                 if side == HAUT:
@@ -391,7 +392,6 @@ class Dessinable(object):
                                         # pour qu'une poutrelle ne fasse pas demi-tour lorsqu'on lui saute dessus
                                         self.speed[1] = 1
                                         self.rect.top = obj.rect.bottom
-
 
                                 elif side == BAS:
 
@@ -415,19 +415,20 @@ class Dessinable(object):
 
                                     if obj.rebord_ and getattr(self, 'marche_bas_', False):
                                         # si le prochain mouvement conduit au dessus d'un trou, faire marche arriere
-                                        # (par exemple, pour que les mechants ne tombent pas dans un trou si l'objet definit un rebord)
+                                        # (par exemple, pour que les mechants ne tombent pas dans un trou
+                                        # si l'objet definit un rebord)
                                         if deplacement[0] != 0:
-                                            rectPas = self.rect.copy()
-                                            rectPas.h = self.marche_bas_
-                                            rectPas.top = self.rect.bottom
+                                            rect_pas = self.rect.copy()
+                                            rect_pas.h = self.marche_bas_
+                                            rect_pas.top = self.rect.bottom
 
                                             if deplacement[0] > 0:
-                                                rectPas.left = self.rect.right
+                                                rect_pas.left = self.rect.right
                                             else:
-                                                rectPas.right = self.rect.left
+                                                rect_pas.right = self.rect.left
 
                                             if not any([not Elem.penetrable_haut_ for Elem in
-                                                        self._crible.Intersecte(rectPas, self)]):
+                                                        self._crible.Intersecte(rect_pas, self)]):
                                                 # Aucun element n'offre un appui - faire demi-tour
                                                 self.speed[0] *= -1
 
@@ -437,13 +438,13 @@ class Dessinable(object):
 
                                     if getattr(self, 'marche_haut_', False) and not isinstance(obj, EnemiInterface):
                                         # Monte la marche si elle est moins haute que self.marche_haut_
-                                        rectPas = self.rect.copy()
+                                        rect_pas = self.rect.copy()
 
-                                        rectPas.bottom = rectPas.bottom - self.marche_haut_
+                                        rect_pas.bottom = rect_pas.bottom - self.marche_haut_
 
                                         if not any(
                                                 [not Elem.penetrable_haut_ or not Elem.penetrable_traverse_ for Elem in
-                                                 self._crible.Intersecte(rectPas, self)]):
+                                                 self._crible.Intersecte(rect_pas, self)]):
                                             # Monte la marche
                                             self.rect.bottom = obj.rect.top
                                             self.deplace()
@@ -465,7 +466,7 @@ class Dessinable(object):
             gravite = self.gravite
             vmax = self.v_Y_max
 
-            if TRAVERSE in ChocsBySide and isinstance(ChocsBySide[TRAVERSE][0][2], MilieuAquatique):
+            if TRAVERSE in chocs_by_side and isinstance(chocs_by_side[TRAVERSE][0][2], MilieuAquatique):
                 gravite /= 3.
                 vmax /= 3.
 
@@ -477,7 +478,7 @@ class Dessinable(object):
         if self.vivant():
             self.deplace()
 
-    def collisione(self, Speed, Rect1):
+    def collisione(self, speed, rect1):
         """
             side, penetration, bloquant, self
             
@@ -487,54 +488,54 @@ class Dessinable(object):
         """
         tx = ty = None
 
-        sx, sy = Speed
+        sx, sy = speed
 
         sy = int(sy)
 
-        traverseX = False
-        traverseY = False
+        traverse_x = False
+        traverse_y = False
         """
 
         """
         if sx > 0:
 
-            dx = Rect1.right - self.rect.left
+            dx = rect1.right - self.rect.left
 
             if dx > 0:
                 if dx <= sx:
                     tx = (sx - dx) / sx
                 else:
-                    traverseX = dx
+                    traverse_x = dx
 
         elif sx < 0:
 
-            dx = self.rect.right - Rect1.left
+            dx = self.rect.right - rect1.left
 
             if dx > 0:
                 if dx <= -sx:
                     tx = (-sx - dx) / -sx
                 else:
-                    traverseX = dx
+                    traverse_x = dx
 
         if sy > 0:
 
-            dy = Rect1.bottom - self.rect.top
+            dy = rect1.bottom - self.rect.top
 
             if dy > 0:
                 if dy <= sy:
                     ty = (sy - dy) / sy
                 else:
-                    traverseY = dy
+                    traverse_y = dy
 
         elif sy < 0:
 
-            dy = self.rect.bottom - Rect1.top
+            dy = self.rect.bottom - rect1.top
 
             if dy > 0:
                 if dy <= -sy:
                     ty = (-sy - dy) / -sy
                 else:
-                    traverseY = dy
+                    traverse_y = dy
 
         penetrables = self._penetrable
         if len(penetrables) < 5:
@@ -542,7 +543,7 @@ class Dessinable(object):
 
         if tx is None and ty is None:
 
-            if traverseX or traverseY or self.rect.colliderect(Rect1):
+            if traverse_x or traverse_y or self.rect.colliderect(rect1):
                 # Recouvrement
                 return TRAVERSE, None, None, self
                 # return TRAVERSE, None, penetrables[TRAVERSE], self
@@ -773,7 +774,7 @@ class Perso(Dessinable, Personnage):
         self.decompte_kamea = 0
         self.pouvoir_kamea = False
         self.volte_face = 0
-        self.enTransformation = 0
+        self.en_transformation = 0
         self.temps_transfo = 45
 
         self._boursePieces = 0
@@ -839,7 +840,6 @@ class Perso(Dessinable, Personnage):
                     images_grand = [[charge_image(img, flip=flip) for img in nomImagesGrand] for flip in (False, True)]
 
                     self.toutes_images[1].append(images_grand)
-
 
         else:
             # mario
@@ -951,9 +951,8 @@ class Perso(Dessinable, Personnage):
     etat_ = etat
 
     def metamorphe(self, touche=False):
-        
 
-        self.enTransformation = self.temps_transfo
+        self.en_transformation = self.temps_transfo
 
         etat_avant = self.etat
 
@@ -976,9 +975,11 @@ class Perso(Dessinable, Personnage):
 
         elif self.etat >= 1:
             self.son_grandit.play()
+            self.accroupi = False
 
         else:
             self.son_rapetit.play()
+
 
     def recadre_image(self, insere=False):
         if self.image and self.rect.size != self.image.get_size():
@@ -1002,17 +1003,17 @@ class Perso(Dessinable, Personnage):
 
             return
 
-        if self.enTransformation:
+        if self.en_transformation:
             freq = 4
             if self.etat >= 2:
                 # Change de couleur
 
                 images = self.toutes_images[self.taille]
-                couleur = self.enTransformation // freq % len(images)
+                couleur = self.en_transformation // freq % len(images)
 
             else:
                 # Change de taille
-                taille = self.enTransformation // freq % 3
+                taille = self.en_transformation // freq % 3
 
                 if taille == 2:
                     self.image = self.toutes_images[1][self.couleur][self._vers_gauche][-2]  # image moyen
@@ -1144,7 +1145,6 @@ class Perso(Dessinable, Personnage):
 
                 self.agrippe = False
 
-
         elif side in (DROITE, GAUCHE):
             if sprite.penetrable and not sprite.penetrable[_CoteReciproque[side]]:
                 self.en_rebond = False
@@ -1183,7 +1183,7 @@ class Perso(Dessinable, Personnage):
 
         if not self.auto_pilote:
 
-            if self.enTransformation <= 0 and self.decompte_tir <= 0 and self.etat >= 2 and not self.accroupi \
+            if self.en_transformation <= 0 and self.decompte_tir <= 0 and self.etat >= 2 and not self.accroupi \
                     and Boulette.NombBoulettes < Boulette.MaxBoulettes:
 
                 if self.pouvoir_kamea:
@@ -1195,13 +1195,13 @@ class Perso(Dessinable, Personnage):
                     self.decompte_tir = 10
 
                     if self._vers_gauche:
-                        posX = self.rect.left
+                        pos_x = self.rect.left
                     else:
-                        posX = self.rect.right
+                        pos_x = self.rect.right
 
-                    posY = self.rect.top + 30
+                    pos_y = self.rect.top + 30
 
-                    boulette = Boulette((posX, posY))
+                    boulette = Boulette((pos_x, pos_y))
                     if self._vers_gauche:
                         boulette.rect.left -= boulette.rect.w
 
@@ -1288,11 +1288,11 @@ class Perso(Dessinable, Personnage):
         if self.decompte_tir > 0:
             self.decompte_tir -= 1
 
-        if self.enTransformation:
+        if self.en_transformation:
 
-            self.enTransformation -= 1
+            self.en_transformation -= 1
             self.rafraichit_image(auRepos=True)
-            self.recadre_image(insere=not self.enTransformation)
+            self.recadre_image(insere=not self.en_transformation)
 
             return
 
@@ -1475,15 +1475,18 @@ class ControlePerso(object):
     BoutonB_key = pygame.K_x
 
     BoutonA_joy = 0
-    BoutonB_joy = 1
+    BoutonB_joy = 2 #1
 
     def __init__(self):
 
-        try:
+        pygame.joystick.init()
+        if pygame.joystick.get_count() > 0:
+            print(f'get_init: {pygame.joystick.get_init()}')
             self.joystick = pygame.joystick.Joystick(0)
             self.joystick.init()
             self.bouton_croix = self.joystick.get_numhats() > 0
-        except:
+            print(f'manette active ; numhats: {self.joystick.get_numhats()}')
+        else:
             self.joystick = None
             self.bouton_croix = False
 
@@ -1858,10 +1861,10 @@ class CoeurMultiColore(Flotant, SurpriseMouvante):
 
         if isinstance(joueur, Perso) and not isinstance(joueur, PersoNonJoueur):
             joueur.pouvoir_kamea = False
-            if joueur.etat != 1 and not joueur.enTransformation:
+            if joueur.etat != 1 and not joueur.en_transformation:
                 joueur.etat = 1
                 joueur.couleur = 0
-                joueur.enTransformation = joueur.temps_transfo
+                joueur.en_transformation = joueur.temps_transfo
 
     def maj(self):
 
