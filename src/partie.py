@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import print_function
 from __future__ import absolute_import
 import sys
@@ -21,54 +19,54 @@ from .interruptions import MortJoueur, TransferMonde, InterruptionDePartie
 from . import niveau
 
 
-def GetEcran(PleinEcran):
-    if PleinEcran:
-        Flags = pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
+def getModeEcran(plein_ecran):
+    if plein_ecran:
+        flags = pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
     else:
-        Flags = pygame.DOUBLEBUF  # | pygame.NOFRAME
+        flags = pygame.DOUBLEBUF  # | pygame.NOFRAME
 
     titre = pygame.display.get_caption()
     pygame.display.quit()
 
-    mode = pygame.display.set_mode(Partie.TailleEcran, Flags)
+    mode = pygame.display.set_mode(Partie.TailleEcran, flags)
     pygame.display.set_caption(*titre)
     return mode
 
 
-def RectFromPoints(Point1, Point2):
-    P1, P2 = (min(Point1[0], Point2[0]), min(Point1[1], Point2[1])), \
-             (max(Point1[0], Point2[0]), max(Point1[1], Point2[1]))
+def rect_from_points(pt1, pt2):
+    p1, p2 = (min(pt1[0], pt2[0]), min(pt1[1], pt2[1])), \
+             (max(pt1[0], pt2[0]), max(pt1[1], pt2[1]))
 
-    return P1[0], P1[1], P2[0] - P1[0], P2[1] - P1[1]
+    return p1[0], p1[1], p2[0] - p1[0], p2[1] - p1[1]
 
 
-def barycentre(Coords):
+def barycentre(coords):
     """ Barycentre d'un ensemble de points (x,y)"""
-    Bar = [0, 0]
-    for Coors in Coords:
-        Bar[0] += Coors[0]
-        Bar[1] += Coors[1]
+    bar = [0, 0]
+    for coors in coords:
+        bar[0] += coors[0]
+        bar[1] += coors[1]
 
-    NumPoints = float(len(Coords))
-    Bar[0] /= NumPoints
-    Bar[1] /= NumPoints
+    NumPoints = float(len(coords))
+    bar[0] /= NumPoints
+    bar[1] /= NumPoints
 
-    return Bar
+    return bar
 
 
-class Camera(object):
+class Camera:
 
     def __init__(self, posCentre=(0, 0)):
 
         self.rect = pygame.display.get_surface().get_rect()
         self.rect_monde = None
-        self.StillDim = 64
+        self.still_dim = 64
 
-    def SetRectMonde(self, rect):
+    def set_rect_monde(self, rect):
         self.rect_monde = rect
         self.rect.bottomleft = self.rect_monde.bottomleft
 
-    def RelRect(self, actor):
+    def rel_rect(self, actor):
         """ passage du referentiel monde au referentiel camera """
         if isinstance(actor, Rect):
             rect = actor
@@ -79,60 +77,60 @@ class Camera(object):
     def AbsPoint(self, point):
         return point[0] + self.rect.x, point[1] + self.rect.y
 
-    def RelPoint(self, point):
+    def rel_point(self, point):
         return point[0] - self.rect.x, point[1] - self.rect.y
 
-    def AbsRect_ip(self, rect):
+    def abs_rect_ip(self, rect):
         """ conversion de Rect du referentiel camera au referentiel absolu """
         rect.x += self.rect.x
         rect.y += self.rect.y
 
-    def Deplace(self, dX, dY):
+    def deplace(self, dX, dY):
         self.rect.centerx += dX
         self.rect.centery += dY
 
     def maj(self, cible, revenirEnArriere=True):
         """mise a jour"""
 
-        if cible[0] > self.rect.centerx + self.StillDim:
-            self.rect.centerx = cible[0] - self.StillDim
-        elif revenirEnArriere and cible[0] < self.rect.centerx - self.StillDim:
-            self.rect.centerx = cible[0] + self.StillDim
+        if cible[0] > self.rect.centerx + self.still_dim:
+            self.rect.centerx = cible[0] - self.still_dim
+        elif revenirEnArriere and cible[0] < self.rect.centerx - self.still_dim:
+            self.rect.centerx = cible[0] + self.still_dim
 
-        if cible[1] > self.rect.centery + self.StillDim:
-            self.rect.centery = cible[1] - self.StillDim
-        elif cible[1] < self.rect.centery - self.StillDim:
-            self.rect.centery = cible[1] + self.StillDim
+        if cible[1] > self.rect.centery + self.still_dim:
+            self.rect.centery = cible[1] - self.still_dim
+        elif cible[1] < self.rect.centery - self.still_dim:
+            self.rect.centery = cible[1] + self.still_dim
 
         self.rect.clamp_ip(self.rect_monde)
 
 
-class Partie(object):
+class Partie:
     Ombre = False
     TailleEcran = 640, 480
 
     def __init__(self):
 
-        self.EnPause = False
-        self.JouerMusique = True
-        self.affiche_stats = False
+        self.en_pause = False
+        self.jouer_musique = True
+        self._affiche_stats = False
         self.phase_decompte = False
-        self.PhotosDejaVues = set()
+        self.photos_deja_vues = set()
 
         self.grilleRef = None
-        self.SelectionElem = []
+        self.selection_elem = []
         self.SelectionMotif = []
 
         self.couleur_selection = pygame.Color(0, 255, 0, 100)
-        self.affiche_crible = False
+        self._affiche_crible = False
         self.avec_photos = False
-        self.Clic_Precedent = None
+        self.clic_precedent = None
 
         ecran = pygame.display.get_surface()
         self.ecranH = ecran.get_height()
         self.ecranL = ecran.get_width()
 
-        self._plein_ecran = False
+        self._plein_ecran = True
 
         # mode pas a pas, i.e. action image par image, utile pour le deverolage
         self.pas_a_pas = None
@@ -153,34 +151,34 @@ class Partie(object):
 
         self.mini_pieces = [media.charge_image('piecette%d.png' % i) for i in (1, 3, 2, 1, 1)]
 
-        self.tempsBoucleMs = 60  # millisecondes
+        self.temps_boucle_ms = 60  # millisecondes
 
         self.niveau = None
 
-    def RetailleMonde(self):
+    def retaille_monde(self):
         """ Calcule les dimensions du rectangle contenant tous les elements du niveau"""
         rect = self.niveau.Elements[0].rect.copy()
 
-        rect.unionall_ip([Elem.rect for Elem in self.niveau.Elements])
+        rect.unionall_ip([elem.rect for elem in self.niveau.Elements])
 
-        rectMin = pygame.Rect((0, 0), self.TailleEcran)
+        rect_min = pygame.Rect((0, 0), self.TailleEcran)
 
         if self.niveau.parallaxe_:
             print('taille image_fond', self.niveau._image_fond.get_size())
             fondH = self.niveau._image_fond.get_height()
             if fondH > self.TailleEcran[1]:
-                rectMin.h = fondH
+                rect_min.h = fondH
 
-        rectMin.left = rect.left
-        rectMin.right = rect.right
+        rect_min.left = rect.left
+        rect_min.right = rect.right
 
         # rectMin.bottomleft = rect.bottomleft
-        rect.union_ip(rectMin)
+        rect.union_ip(rect_min)
         rect.bottom -= self.niveau.marge_bas_ * media.TAILLE_BLOC
 
-        self.camera.SetRectMonde(rect)
+        self.camera.set_rect_monde(rect)
 
-        if self.affiche_stats:
+        if self._affiche_stats:
             print('Dimensions du Monde', self.niveau.nom, self.camera.rect_monde)
             for elem in self.niveau.Elements:
                 if elem.rect.left <= self.camera.rect_monde.left:
@@ -201,15 +199,15 @@ class Partie(object):
 
         self.camera = Camera()
 
-        self.Init_Niveau(nom_niveau)
+        self.init_niveau(nom_niveau)
 
-        self.Intro_Niveau()
+        self.lancer_intro_niveau()
 
         while True:
 
             try:
 
-                self.Boucle_Niveau()
+                self.boucle_niveau()
 
             except TransferMonde as exc:
                 # perso a fini le niveau, poursuit vers le niveau suivant
@@ -217,9 +215,9 @@ class Partie(object):
                     self.points += self.perso.points
 
                 self.perso.efface()
-                self.Init_Niveau(nomNiveau=exc.monde, entree=exc.entree)
+                self.init_niveau(nomNiveau=exc.monde, entree=exc.entree)
 
-                self.Intro_Niveau(affiche=exc.decompte)
+                self.lancer_intro_niveau(affiche=exc.decompte)
 
                 self.phase_decompte = False
 
@@ -230,21 +228,21 @@ class Partie(object):
                 self.compte_a_rebours = 0
 
                 if self.perso.vies <= 0:
-                    self.FinDePartie()
+                    self.affiche_fin_de_partie()
                     return
 
                 # reset player
                 self.perso = Perso((0, 0), vies=self.perso.vies)
 
-                self.Init_Niveau(nomNiveau=self.niveau.nom)
+                self.init_niveau(nomNiveau=self.niveau.nom)
 
-                self.Intro_Niveau()
+                self.lancer_intro_niveau()
 
             except InterruptionDePartie:
                 print("Partie interrompue par le joueur")
                 return
 
-    def Intro_Niveau(self, affiche=True):
+    def lancer_intro_niveau(self, affiche=True):
         # Ecran d'introduction du niveau
 
         media.arret_musique()
@@ -252,7 +250,7 @@ class Partie(object):
         ecran = pygame.display.get_surface()
         ecran.fill((0, 0, 0))
 
-        if self.avec_photos and self.niveau.nom not in self.PhotosDejaVues:
+        if self.avec_photos and self.niveau.nom not in self.photos_deja_vues:
             sons = ["smb_coin.wav",
                     "smb_powerup.wav",
                     "1up.ogg",
@@ -260,20 +258,20 @@ class Partie(object):
 
             sons_obj = [media.charge_son(son) for son in sons]
 
-            sonCocoCouda = media.charge_son("the A-team theme.ogg")
+            son_cococouda = media.charge_son("the A-team theme.ogg")
 
-            Cococouda = False
+            est_cococouda = False
 
-            self.PhotosDejaVues.add(self.niveau.nom)
+            self.photos_deja_vues.add(self.niveau.nom)
             for img in self.niveau.photos_:
 
                 try:
 
-                    if self.niveau.nom == '1-1 bis' and not Cococouda:
-                        Cococouda = True
-                        sonCocoCouda.play()
+                    if self.niveau.nom == '1-1 bis' and not est_cococouda:
+                        est_cococouda = True
+                        son_cococouda.play()
 
-                    elif not Cococouda:
+                    elif not est_cococouda:
                         sons_obj[random.randint(0, len(sons) - 1)].play()
 
                     intercalaires.planche(photo=img, Extro=True)
@@ -284,24 +282,24 @@ class Partie(object):
                 except media.MediaManquantExc as exc:
                     print(exc)
 
-            if Cococouda:
-                sonCocoCouda.stop()
+            if est_cococouda:
+                son_cococouda.stop()
 
         if affiche:
             ecran = pygame.display.get_surface()
 
             ecran.fill((0, 0, 0))
 
-            self.Affiche_Stats()
+            self.affiche_stats()
 
-            ecranL, ecranH = ecran.get_size()
-            centreX, centreY = ecranL / 2, ecranH / 2
+            ecran_l, ecran_h = ecran.get_size()
+            centre_x, centre_y = ecran_l / 2, ecran_h / 2
             ren = self.police.render(langues.Traduc(langues.Monde) + " " + self.niveau.nom.split("=")[0], 1,
                                      (255, 255, 255))
-            ecran.blit(ren, (centreX - ren.get_width() / 2, centreY - 60))
-            ecran.blit(self.perso.image, (centreX - ren.get_width() / 2, centreY - 10))
+            ecran.blit(ren, (centre_x - ren.get_width() / 2, centre_y - 60))
+            ecran.blit(self.perso.image, (centre_x - ren.get_width() / 2, centre_y - 10))
             ren = self.police.render("x  %d" % self.perso.vies, 1, (255, 255, 255))
-            ecran.blit(ren, (centreX * 1.1 - ren.get_width() / 2, centreY))
+            ecran.blit(ren, (centre_x * 1.1 - ren.get_width() / 2, centre_y))
 
         pygame.display.flip()
         pause = 2500
@@ -312,32 +310,31 @@ class Partie(object):
 
     def ecran_de_mort(self):
 
-        self.VoileDOmbre(100)
+        self.affiche_voile_d_ombre(100)
         ecran = pygame.display.get_surface()
 
         ren = self.police.render(langues.Traduc(langues.Perdu), 1, (255, 255, 255))
         ecran.blit(ren, (320 - ren.get_width() / 2, 235))
-        self.Affiche_Stats()
+        self.affiche_stats()
         pygame.display.flip()
         pygame.time.wait(2500)
 
     def show_end(self):
-
         pygame.time.wait(7500)
         pygame.display.flip()
 
-    def FinDePartie(self):
+    def affiche_fin_de_partie(self):
         media.lire_musique("smb_gameover.wav")
         intercalaires.planche([langues.Traduc(langues.Echec)])
         media.arret_musique()
 
-    def Init_Niveau(self, nomNiveau='', entree=0, reinit=True):
+    def init_niveau(self, nomNiveau='', entree=0, reinit=True):
 
         if reinit or not self.niveau:
             if niveau.Existe(nomNiveau):
-                Info = niveau.Ouvrir(nomNiveau)
-                if Info:
-                    self.niveau = Info
+                info = niveau.Ouvrir(nomNiveau)
+                if info:
+                    self.niveau = info
             else:
                 self.niveau = niveau.Monde(nomNiveau)
 
@@ -348,7 +345,7 @@ class Partie(object):
         if self.niveau.etat_joueur_ is not None and self.niveau.etat_joueur_ != '':
             self.perso.etat = self.niveau.etat_joueur_
 
-        self.RetailleMonde()
+        self.retaille_monde()
 
         if self.compte_a_rebours <= 0:
             self.compte_a_rebours = self.niveau.tempsMax_
@@ -390,21 +387,21 @@ class Partie(object):
 
             Elem.perso = self.perso
 
-    def Affiche_Elems_Niveau(self):
+    def affiche_elems_niveau(self):
 
         # for s in self.crible.Intersecte(self.camera.rect):
         # l'ordre d'affichage des elements selon leur position dans self.elems
         # est essentiel
-        elems = self.crible.Intersecte(self.camera.rect)
+        elems = self.crible.intersecte(self.camera.rect)
         ecran = pygame.display.get_surface()
-        for elem in self.OrdonneElems(elems):
+        for elem in self.ordonne_elems(elems):
             try:
                 elem.affiche(ecran, self.camera)
             except:
                 traceback.print_exc()
                 print(elem, elem.rect)
 
-    def Boucle_Niveau(self):
+    def boucle_niveau(self):
 
         avertissement = self.niveau.tempsMax_ <= 100
         transfer_monde_exc = None
@@ -420,7 +417,7 @@ class Partie(object):
                 self.perso.Controle.capte()
 
             try:
-                self.TraiterEvenements()
+                self.traite_les_evenements()
 
             except (SystemExit, InterruptionDePartie):
                 raise
@@ -428,17 +425,17 @@ class Partie(object):
             except:
                 traceback.print_exc()
 
-            if self.affiche_crible:
+            if self._affiche_crible:
                 pass
                 # self.crible.Integrite()
                 # self.elems.integrite()
 
-            if not self.EnPause and (self.pas_a_pas is None or self.pas_a_pas):
+            if not self.en_pause and (self.pas_a_pas is None or self.pas_a_pas):
 
                 if self.pas_a_pas is True:
                     self.pas_a_pas = False
 
-                self.horloge.tick(self.tempsBoucleMs)
+                self.horloge.tick(self.temps_boucle_ms)
                 self.temps_discret += 1
                 elems.Dessinable.index_temps = self.temps_discret
 
@@ -454,7 +451,7 @@ class Partie(object):
                     RectAction.h += 50 + extraH
 
                     # Elements actifs
-                    for s in self.crible.Intersecte(RectAction):
+                    for s in self.crible.intersecte(RectAction):
 
                         if s.vivant():
 
@@ -464,8 +461,8 @@ class Partie(object):
                             if s.rect.colliderect(self.camera.rect):
 
                                 s.hors_champ = False
-                                if hasattr(s, 'ActionInCamera'):
-                                    s.ActionInCamera(self.perso, self.camera)
+                                if hasattr(s, 'action_in_camera'):
+                                    s.action_in_camera(self.perso, self.camera)
 
                             else:
                                 s.horschamp(self.perso, self.camera)
@@ -517,14 +514,14 @@ class Partie(object):
 
                     else:
                         # Compte a rebours negatif en attendant de passer au niveau suivant.
-                        self.compte_a_rebours -= self.tempsBoucleMs * .001
+                        self.compte_a_rebours -= self.temps_boucle_ms * .001
 
                 else:
                     # pas en phase decompte
 
                     if self.perso.vivant():
 
-                        self.compte_a_rebours -= self.tempsBoucleMs * .001
+                        self.compte_a_rebours -= self.temps_boucle_ms * .001
 
                         if self.compte_a_rebours <= 100 and not avertissement:
                             # Compte a rebours lorsque le temps descend sous 100
@@ -577,19 +574,19 @@ class Partie(object):
 
             ecran.blit(image_fond, (0, 0), area=area)
 
-            self.Affiche_Elems_Niveau()
-            self.Affiche_Stats()
+            self.affiche_elems_niveau()
+            self.affiche_stats()
 
-            if self.affiche_crible:
-                self.AfficheCrible()
+            if self._affiche_crible:
+                self.affiche_crible()
 
-            if self.EnPause:
-                self.VoileDOmbre(100)
+            if self.en_pause:
+                self.affiche_voile_d_ombre(100)
 
                 self.affiche_texte("PAUSE", pos=(self.TailleEcran[0] / 2, self.TailleEcran[1] / 2))
 
             if self.Ombre:
-                self.VoileDOmbre(200)
+                self.affiche_voile_d_ombre(200)
 
             pygame.display.flip()
 
@@ -599,25 +596,25 @@ class Partie(object):
 
     def affiche_texte(self, texte, pos, centre=(True, True), couleur=(255, 255, 255)):
         """affiche du texte a l'ecran"""
-        texteImg = self.police.render(texte, 2, (255, 255, 255))
+        texte_img = self.police.render(texte, 2, (255, 255, 255))
 
-        CoinHautGauche = list(pos)
-        txtDim = texteImg.get_size()
+        coin_haut_gauche = list(pos)
+        txt_dim = texte_img.get_size()
         ecran = pygame.display.get_surface()
 
         for i in 0, 1:
 
             if centre[i]:
-                CoinHautGauche[i] -= txtDim[i] / 2
+                coin_haut_gauche[i] -= txt_dim[i] / 2
 
             elif pos[i] < 0:
-                CoinHautGauche[i] += self.TailleEcran[i] - txtDim[i]
+                coin_haut_gauche[i] += self.TailleEcran[i] - txt_dim[i]
 
-        ecran.blit(texteImg, CoinHautGauche)
+        ecran.blit(texte_img, coin_haut_gauche)
 
-        return txtDim
+        return txt_dim
 
-    def VoileDOmbre(self, alpha=100):
+    def affiche_voile_d_ombre(self, alpha=100):
         ombre = pygame.Surface(self.TailleEcran)
         ombre.fill((0, 0, 0))
         ombre.set_alpha(alpha)
@@ -634,10 +631,10 @@ class Partie(object):
         """ Mode d'affichage plein Ecran / fenetre """
 
         self._plein_ecran = val
-        GetEcran(self._plein_ecran)
+        getModeEcran(self._plein_ecran)
         pygame.mouse.set_visible(False)
 
-    def TraiterEvenements(self):
+    def traite_les_evenements(self):
 
         # Instructions des peripheriques
         for e in pygame.event.get():
@@ -651,14 +648,14 @@ class Partie(object):
                 key = e.key
                 if key == K_F1:
                     # Affiche l'aide
-                    Aide = """  
+                    aide = """  
                                 e : mode plein ecran
 
                                 echap : interruption de la partie - retour au menu
 
                                 """.splitlines()
 
-                    intercalaires.planche(Aide, taille=8, centre=False, Extro=False, Intro=False)
+                    intercalaires.planche(aide, taille=8, centre=False, Extro=False, Intro=False)
 
                 elif key == K_SPACE:
                     # Mode pas a pas
@@ -673,7 +670,7 @@ class Partie(object):
 
                     # Mise en pause
                     else:
-                        self.Bascule_Pause()
+                        self.bascule_en_pause()
 
                 elif key == K_ESCAPE:
                     # Sortie du jeu
@@ -690,7 +687,7 @@ class Partie(object):
                     print('perso invincible:', self.perso.invincible)
 
                 elif key in (ControlePerso.BoutonA_key, ControlePerso.BoutonB_key):
-                    if not self.EnPause and not self.phase_decompte:
+                    if not self.en_pause and not self.phase_decompte:
                         if key == ControlePerso.BoutonA_key:
                             self.perso.Controle.BoutonA_evenement = True
                         else:
@@ -698,14 +695,14 @@ class Partie(object):
 
                 elif key == K_F2:
                     # Mode musique / silencieux
-                    self.JouerMusique = not self.JouerMusique
-                    if self.JouerMusique:
+                    self.jouer_musique = not self.jouer_musique
+                    if self.jouer_musique:
                         pygame.mixer.music.unpause()
                     else:
                         pygame.mixer.music.pause()
 
                 elif key in [pygame.K_PRINT]:
-                    self.ImprimeEcran(versPressePapier=e.mod & pygame.KMOD_CTRL)
+                    self.imprime_ecran(vers_presse_papier=e.mod & pygame.KMOD_CTRL)
 
                 elif key == K_b:
                     # change les boutons de la manette
@@ -716,83 +713,83 @@ class Partie(object):
                     print('BoutonB', elems.ControlePerso.BoutonB_joy)
 
             elif e.type == pygame.JOYBUTTONDOWN:
-                if not self.EnPause and e.button == ControlePerso.BoutonA_joy:
+                if not self.en_pause and e.button == ControlePerso.BoutonA_joy:
                     # Saut du perso joueur
                     self.perso.saute()
 
-                elif not self.EnPause and e.button == ControlePerso.BoutonB_joy:
+                elif not self.en_pause and e.button == ControlePerso.BoutonB_joy:
                     self.perso.tire()
 
                 elif e.button == 3:
                     # mise en pause
-                    self.Bascule_Pause()
+                    self.bascule_en_pause()
 
                 else:
                     pass
 
-    def OrdonneElems(self, Elems):
-        return sorted(Elems, key=self.elems.index)
+    def ordonne_elems(self, elems):
+        return sorted(elems, key=self.elems.index)
 
-    def Bascule_Pause(self):
-        self.EnPause = not self.EnPause
+    def bascule_en_pause(self):
+        self.en_pause = not self.en_pause
 
-        if self.EnPause:
+        if self.en_pause:
             self.son_pause.play()
             pygame.mixer.music.pause()
         else:
             pygame.mixer.music.unpause()
 
-    def AfficheCrible(self):
+    def affiche_crible(self):
 
-        if self.SelectionElem:
-            Rects = [elem.rect for elem in self.SelectionElem]
+        if self.selection_elem:
+            rects = [elem.rect for elem in self.selection_elem]
         else:
-            Rects = [self.camera.rect]
+            rects = [self.camera.rect]
 
         ecran = pygame.display.get_surface()
-        for rect in Rects:
-            for rectCoor in self.crible.Rects(rect):
-                pygame.draw.rect(ecran, (250, 150, 50), self.camera.RelRect(Rect(*rectCoor)), 1)
+        for rect in rects:
+            for rect_coor in self.crible.rects(rect):
+                pygame.draw.rect(ecran, (250, 150, 50), self.camera.rel_rect(Rect(*rect_coor)), 1)
 
-    def Affiche_Stats(self):
+    def affiche_stats(self):
 
         ecran = pygame.display.get_surface()
-        EcranL, EcranH = self.TailleEcran
-        MargeCote = self.ecranL / EcranL * 50
+        ecran_l, ecran_h = self.TailleEcran
+        marge_cote = self.ecranL / ecran_l * 50
 
-        PoliceH = self.police.get_height() * 20 / 16
-        MargeH = self.ecranH / EcranH * 10
+        police_h = self.police.get_height() * 20 / 16
+        marge_h = self.ecranH / ecran_h * 10
 
         # Nom du perso
-        texteDim = self.affiche_texte(self.perso.nom.upper(), pos=(MargeCote, MargeH), centre=(False, False))
+        texte_dim = self.affiche_texte(self.perso.nom.upper(), pos=(marge_cote, marge_h), centre=(False, False))
         self.affiche_texte("%05d" % (self.points + self.perso.points),
-                           pos=(-EcranL + MargeCote + texteDim[0], MargeH + PoliceH), centre=(False, False))
+                           pos=(-ecran_l + marge_cote + texte_dim[0], marge_h + police_h), centre=(False, False))
 
         # Nombre de pieces
-        self.affiche_texte("x%02d" % self.perso.boursePieces, pos=(MargeCote + 100, MargeH + PoliceH),
+        self.affiche_texte("x%02d" % self.perso.boursePieces, pos=(marge_cote + 100, marge_h + police_h),
                            centre=(False, False))
 
         ecran.blit(self.mini_pieces[int(self.temps_discret / 9) % len(self.mini_pieces)],
-                   (MargeCote + 86, MargeH + PoliceH - 3))
+                   (marge_cote + 86, marge_h + police_h - 3))
 
         # Nom du monde
-        AncreMonde = self.TailleEcran[0] / 2 - 100
-        self.affiche_texte(langues.Traduc(langues.Monde), pos=(-AncreMonde, MargeH), centre=(False, False))
-        self.affiche_texte(self.niveau.nom.split('=')[0], pos=(-AncreMonde, MargeH + PoliceH), centre=(False, False))
+        ancre_monde = self.TailleEcran[0] / 2 - 100
+        self.affiche_texte(langues.Traduc(langues.Monde), pos=(-ancre_monde, marge_h), centre=(False, False))
+        self.affiche_texte(self.niveau.nom.split('=')[0], pos=(-ancre_monde, marge_h + police_h), centre=(False, False))
 
         # Temps ecoule
-        self.affiche_texte(langues.Traduc(langues.Temps), pos=(-MargeCote, MargeH), centre=(False, False))
-        self.affiche_texte("%d" % max(0, self.compte_a_rebours), pos=(-MargeCote, MargeH + PoliceH),
+        self.affiche_texte(langues.Traduc(langues.Temps), pos=(-marge_cote, marge_h), centre=(False, False))
+        self.affiche_texte("%d" % max(0, self.compte_a_rebours), pos=(-marge_cote, marge_h + police_h),
                            centre=(False, False))
 
-    def ImprimeEcran(self, versPressePapier=False):
+    def imprime_ecran(self, vers_presse_papier=False):
         """ Sauvegarde l'image a l'ecran """
-        Surface = pygame.display.get_surface().copy()
+        surface = pygame.display.get_surface().copy()
 
-        if versPressePapier:
+        if vers_presse_papier:
             pygame.scrap.init()
             pygame.scrap.set_mode(pygame.SCRAP_CLIPBOARD)
-            image_data = pygame.image.tostring(Surface, "RGBA")
+            image_data = pygame.image.tostring(surface, "RGBA")
             pygame.scrap.put(pygame.SCRAP_BMP, image_data)
 
         else:
@@ -800,15 +797,15 @@ class Partie(object):
             import os
             from . import sauvegarde
 
-            Cliche_REP = media.cheminFichier('cliches', verifExiste=False)
-            if not os.path.exists(Cliche_REP):
-                os.mkdir(Cliche_REP)
+            cliche_rep = media.cheminFichier('cliches', verifExiste=False)
+            if not os.path.exists(cliche_rep):
+                os.mkdir(cliche_rep)
 
-            NomFichier = sauvegarde.SelectDansRepertoire(Cliche_REP, Suffixe='', defaut=self.niveau.nom,
+            nom_fichier = sauvegarde.SelectDansRepertoire(cliche_rep, Suffixe='', defaut=self.niveau.nom,
                                                          Legende="Sauver l'image d'ecran sous :",
                                                          choixNouveau=True, valideExistant=True, Effacable=True)
 
-            if NomFichier:
-                NomComplet = os.path.join(Cliche_REP, NomFichier + '.png')
-                print("sauvegarde d'ecran : %s" % NomComplet)
-                pygame.image.save(Surface, NomComplet)
+            if nom_fichier:
+                nom_complet = os.path.join(cliche_rep, nom_fichier + '.png')
+                print("sauvegarde d'ecran : %s" % nom_complet)
+                pygame.image.save(surface, nom_complet)

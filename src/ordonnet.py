@@ -6,7 +6,7 @@ Created on 2 Jun 2012
 from __future__ import print_function
 
 
-class Ordonnet(object):
+class Ordonnet:
     """Structure de donnees, dictionaire ordonne"""
 
     def __init__(self, elems=[]):

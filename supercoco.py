@@ -6,7 +6,7 @@ import os
 from src import pagedegarde
 
 
-def main(PleinEcran=False):
+def main(plein_ecran=False):
     
     os.environ["SDL_VIDEO_CENTERED"] = "1"
     
@@ -29,7 +29,7 @@ def main(PleinEcran=False):
 
         pygame.mouse.set_visible(0)
         
-        pagedegarde.Menu(pleinEcran=PleinEcran)
+        pagedegarde.Menu(plein_ecran=plein_ecran)
         
     finally:
 

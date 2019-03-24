@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import print_function
 from __future__ import absolute_import
 from .media import charge_image, charge_son, TAILLE_BLOC
@@ -57,7 +55,7 @@ def TriChocsFunc(mid):
     return f
 
 
-class Dessinable(object):
+class Dessinable:
     groupe = None
     penetrable = None
     _crible = None
@@ -186,7 +184,7 @@ class Dessinable(object):
         return '%s %s' % (self.__class__.__name__, self.rect)
         # return '%s %s'%(self.image.fileName.split('.')[0],self.rect)
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
         if self.image:
 
@@ -197,7 +195,7 @@ class Dessinable(object):
                 else:
                     image = self.image
 
-            elif ModeModifs:
+            elif mode_modifs:
                 image = self.image.convert()
                 image.set_alpha(100)
 
@@ -212,14 +210,14 @@ class Dessinable(object):
                     rect = self.rect.copy()
                     rect.center = centre
 
-                RelRect = camera.RelRect(rect)
+                RelRect = camera.rel_rect(rect)
 
                 try:
                     surf.blit(image, RelRect)
                 except:
                     traceback.print_exc()
 
-        if ModeModifs and self.rebord_:
+        if mode_modifs and self.rebord_:
             dessus = RelRect.top + 1
             pygame.draw.line(surf, (250, 150, 30), (RelRect.left, dessus), (RelRect.right, dessus), 3)
 
@@ -230,9 +228,9 @@ class Dessinable(object):
     def insere(self, index=None):
 
         self.groupe.insere(self, index)
-        self._crible.Insere(self.rect, self)
+        self._crible.insere(self.rect, self)
 
-    def reposInit(self):
+    def repos_init(self):
         self.posInit = self.rect.topleft
 
     def vivant(self):
@@ -241,20 +239,20 @@ class Dessinable(object):
     def efface(self, strict=True):
         if self.groupe and self.vivant():
             self.groupe.ote(self)
-            self._crible.Retire(self, strict)
+            self._crible.retire(self, strict)
 
     def tue(self, side=None, points=True):
         self.efface()
 
-    def deplace(self, mouve=None, ModeModifs=False, strict=True):
+    def deplace(self, mouve=None, mode_modifs=False, strict=True):
         if mouve:
             self.rect.move_ip(*mouve)
 
-        if ModeModifs:
-            self.reposInit()
+        if mode_modifs:
+            self.repos_init()
 
         if getattr(self, '_crible', False):
-            self._crible.Deplace(self.rect, self, strict=strict)
+            self._crible.deplace(self.rect, self, strict=strict)
 
     def mouve(self, collision=True):
 
@@ -269,7 +267,7 @@ class Dessinable(object):
 
             mouv_rect = self.rect.union(self.rect.move(*deplacement))
 
-            obstacles = self._crible.Intersecte(mouv_rect, self)
+            obstacles = self._crible.intersecte(mouv_rect, self)
 
             if abs(v_x) >= abs(v_y):
                 if v_y:
@@ -327,14 +325,14 @@ class Dessinable(object):
                             try:
 
                                 if isinstance(self, Personnage):
-                                    if hasattr(obj, 'EffetJoueur') and self.vivant():
+                                    if hasattr(obj, 'effet_joueur') and self.vivant():
                                         # choc n'a pas le meme sens vu depuis la creature.
 
-                                        obj.EffetJoueur(self, _CoteReciproque.get(side))
+                                        obj.effet_joueur(self, _CoteReciproque.get(side))
 
                                 elif isinstance(obj, Personnage):
-                                    if hasattr(self, 'EffetJoueur') and obj.vivant():
-                                        self.EffetJoueur(obj, side=side)
+                                    if hasattr(self, 'effet_joueur') and obj.vivant():
+                                        self.effet_joueur(obj, side=side)
 
                                 if self.vivant():
                                     if hasattr(self, 'on_collision'):
@@ -428,10 +426,9 @@ class Dessinable(object):
                                                 rect_pas.right = self.rect.left
 
                                             if not any([not Elem.penetrable_haut_ for Elem in
-                                                        self._crible.Intersecte(rect_pas, self)]):
+                                                        self._crible.intersecte(rect_pas, self)]):
                                                 # Aucun element n'offre un appui - faire demi-tour
                                                 self.speed[0] *= -1
-
 
                                 else:
                                     # Choc a gauche ou a droite
@@ -444,7 +441,7 @@ class Dessinable(object):
 
                                         if not any(
                                                 [not Elem.penetrable_haut_ or not Elem.penetrable_traverse_ for Elem in
-                                                 self._crible.Intersecte(rect_pas, self)]):
+                                                 self._crible.intersecte(rect_pas, self)]):
                                             # Monte la marche
                                             self.rect.bottom = obj.rect.top
                                             self.deplace()
@@ -640,13 +637,13 @@ class BlocBase(CollidableBloc):
 
         if cote == BAS:
             # Tue les mechants qui se trouvent juste au dessus de la brique
-            for elem in self._crible.Intersecte(self.rect.move(0, -2), self):
+            for elem in self._crible.intersecte(self.rect.move(0, -2), self):
                 if isinstance(elem, Mechant):
                     elem.tue()
 
         self.efface()
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         if side == BAS:
 
@@ -661,9 +658,9 @@ class BlocBase(CollidableBloc):
                     self.declenche(joueur)
 
 
-class Intouchable(object):
+class Intouchable:
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         joueur.blesse()
 
 
@@ -722,7 +719,7 @@ class PositionDepart(Dessinable):
         self.visible_ = False
 
 
-class Personnage(object):
+class Personnage:
     marche_bas_ = 0
     marche_haut_ = 5
 
@@ -1470,7 +1467,7 @@ class Perso(Dessinable, Personnage):
                 self.tue(sautDeFace=False)
 
 
-class ControlePerso(object):
+class ControlePerso:
     BoutonA_key = pygame.K_c
     BoutonB_key = pygame.K_x
 
@@ -1571,7 +1568,7 @@ class PersoNonJoueur(Perso):
                 [[[charge_image(imgName, flip=flip) for imgName in nomImages] for flip in (False, True)]]]
             self.rect = self.toutes_images[0][0][0][0].get_rect()
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         distx = joueur.rect.centerx - self.rect.centerx
 
@@ -1627,7 +1624,7 @@ class Princesse(AutoMobile, Personnage):
         self.joueur.son_vie.play()
         Legende(self.rect.move(0, -15).topleft, '1VIE')
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         distX = joueur.rect.centerx - self.rect.centerx
         if not self.reveillee and abs(distX) < self.distance_reveil_:
@@ -1692,7 +1689,7 @@ class Figurant(Dessinable, Personnage):
         self.rect = self.image.get_rect()
         self.rect.midbottom = midbottom
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         distX = joueur.rect.centerx - self.rect.centerx
 
@@ -1745,7 +1742,7 @@ class Bulle(Flotant):
 
     def maj(self):
 
-        collisions = self._crible.Intersecte(self.rect, self)
+        collisions = self._crible.intersecte(self.rect, self)
         for elem in collisions:
             if isinstance(elem, MilieuAquatique) and elem.rect.top < self.rect.top:
                 break
@@ -1763,7 +1760,7 @@ class FleurDeFeu(Collidable):
     freq = 6
     points = 1000
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         # joueur.son_choc.play()
 
         joueur.metamorphe()
@@ -1779,7 +1776,7 @@ class Chapeau(Collidable):
     nomImages = ["chapeau.png"]
     points = 8000
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         # joueur.Controle.Reset()
         # joueur.auto_pilote = True
         # joueur.Controle.Droite = 100
@@ -1800,10 +1797,10 @@ class Bague(Collidable):
     points = 10000
     freq = 16
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
         self.rafraichit_image()
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         joueur.Controle.Reset()
         joueur.auto_pilote = True
         joueur.Controle.Droite = 100
@@ -1820,7 +1817,7 @@ class Bague(Collidable):
         self.efface()
 
 
-class SurpriseMouvante(object):
+class SurpriseMouvante:
     penetrable = False, False, False, False, True
     impulsionY = 0
     impulsionX = 0
@@ -1855,7 +1852,7 @@ class CoeurMultiColore(Flotant, SurpriseMouvante):
         self.efface()
         ExploPouff(self.rect.center)
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         if self.eclatable_:
             self.tue()
 
@@ -1912,7 +1909,7 @@ class ChampiTaille(SurpriseMouvante, AutoMobile):
     points = 1000
     impulsionX = 2
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         if joueur.etat <= 0:
             joueur.metamorphe()
@@ -1928,7 +1925,7 @@ class CocoNinja(Collidable):
     nomImages = ["coconinja.png"]
     points = 777
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         if joueur.etat != 2:
             joueur.etat = 2
             joueur.enTransformation = joueur.temps_transfo
@@ -1956,7 +1953,7 @@ class Etoile(SurpriseMouvante, AutoMobile):
         self.rafraichit_image()
         self.mouve()
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         self.tue()
         pygame.mixer.music.stop()
         self.son = charge_son("etoile.wav")
@@ -1975,7 +1972,7 @@ class ChampiVert(SurpriseMouvante, AutoMobile):
     nomImages = ["mushroom-green.png"]
     impulsionX = 2
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         self.tue()
         joueur.incremente_vie()
 
@@ -1995,7 +1992,7 @@ class ChampiCoco(ChampiVert):
         Legende(self.rect.move(0, -15).topleft, 'COCO !!!', compteur=150, vX=-1)
         self.image = None
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         if not hasattr(self, 'chrono'):
             self.chrono = joueur.temps_transfo + 20
             joueur.enTransformation = joueur.temps_transfo
@@ -2104,9 +2101,9 @@ class Panneau(Dessinable):
 
         self.compteur -= 1
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
-        cadreRect = camera.RelRect(self.rect.move((8, 8)))
+        cadreRect = camera.rel_rect(self.rect.move((8, 8)))
 
         cadreRect.size = self.cadre
         # Dessine les affiches
@@ -2133,7 +2130,7 @@ class Panneau(Dessinable):
                 surf.blit(img.subsurface(destRect), pos)
 
         # Dessine le cadre
-        Dessinable.affiche(self, surf, camera, ModeModifs=ModeModifs, centre=centre, alpha=alpha)
+        Dessinable.affiche(self, surf, camera, mode_modifs=mode_modifs, centre=centre, alpha=alpha)
 
 
 class PanneauLarge(Panneau):
@@ -2161,7 +2158,7 @@ class Generateur(Collidable):
         self.visible_ = False
         self.impulsion_ = 0, 0
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         if self.delai_ > 0:
             self.delai_ -= 1
@@ -2181,7 +2178,7 @@ class Generateur(Collidable):
                     if self.aleatoire_:
                         self.compteur *= random.random()
 
-    def EffetJoueur(self, joueur, camera):
+    def effet_joueur(self, joueur, camera):
         # active au toucher
         self.active_ = True
 
@@ -2224,7 +2221,7 @@ class Morceau(Dessinable):
             self.efface()
 
 
-class Ebranlable(object):
+class Ebranlable:
     """ Bloc a declenchement"""
 
     def __init__(self, Surprise=None, NumFois=1, deplacement=None):
@@ -2294,16 +2291,16 @@ class Ebranlable(object):
 
                     Apparition(pos=self.rect.topleft, boite=self.rect, surprise=surprise, index=self.index() - 1)
 
-    def affiche(self, surf, camera, ModeModifs=False):
-        Dessinable.affiche(self, surf, camera, ModeModifs=ModeModifs)
+    def affiche(self, surf, camera, mode_modifs=False):
+        Dessinable.affiche(self, surf, camera, mode_modifs=mode_modifs)
 
-        if ModeModifs:
+        if mode_modifs:
             if self.surprise_:
                 # img = media.charge_image(self.surprise_.nomImages[0])
                 img = self.surprise_.image_rpr(self.surprise_)
                 img = pygame.transform.scale(img, (Vec(img.get_size()) / 1.5).ent())
                 img.set_alpha(200)
-                surf.blit(img, camera.RelRect(self))
+                surf.blit(img, camera.rel_rect(self))
 
     def on_collision(self, side, sprite):
 
@@ -2364,11 +2361,11 @@ class Apparition(Collidable):
             self.pas /= float(duree)
             self.pas = int(max(self.pas, 1))
 
-    def EffetJoueur(self, joueur, side):
-        if hasattr(self.surprise_, 'EffetJoueur'):
+    def effet_joueur(self, joueur, side):
+        if hasattr(self.surprise_, 'effet_joueur'):
             self.surprise_.rect.center = self.rect.center
             self.surprise_.insere()
-            self.surprise_.EffetJoueur(joueur, side)
+            self.surprise_.effet_joueur(joueur, side)
             self.efface()
 
     def maj(self):
@@ -2487,7 +2484,7 @@ class PlatformeQ(Ebranlable, BlocBase):
             print(self.penetrable_gauche_)
             print(self.penetrable_traverse_)
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
         self.rafraichit_image()
         self.declenche_maj()
 
@@ -2540,13 +2537,13 @@ class PinTronc(Dessinable):
     nomImages = ["Pintroncpt.png"]
 
 
-class Passage(object):
+class Passage:
 
     def __init__(self):
         self.monde_suivant_ = ''
         self.sortie_ = 0
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
         if self.monde_suivant_:
             font_size = 10
@@ -2558,7 +2555,7 @@ class Passage(object):
                 rect.center = self.rect.center
                 rect.move_ip(0, font_size * idx - 1)
 
-                surf.blit(imgTexte, camera.RelRect(rect))
+                surf.blit(imgTexte, camera.rel_rect(rect))
 
 
 class Tuyeau(CollidableBloc, Passage):
@@ -2602,7 +2599,7 @@ class Tuyeau(CollidableBloc, Passage):
             else:
                 return DROITE
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         if not self._perso:
             cote_entree = self.cote_entree
@@ -2672,7 +2669,7 @@ class Tuyeau(CollidableBloc, Passage):
                 self.rectPerso.move_ip(mouve[self.cote_entree])
                 self.rectPerso = self.rectPerso.clip(self.rectPersoInit)
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
         if self.imgPerso:
             area = self.rectPerso.copy()
@@ -2682,20 +2679,20 @@ class Tuyeau(CollidableBloc, Passage):
                 if self.rectPerso.right < self.rectPersoInit.right:
                     area.left = self.rectPersoInit.right - self.rectPerso.right
 
-            surf.blit(self.imgPerso, camera.RelRect(self.rectPerso), area)
+            surf.blit(self.imgPerso, camera.rel_rect(self.rectPerso), area)
 
-        Dessinable.affiche(self, surf, camera, ModeModifs, centre, alpha)
+        Dessinable.affiche(self, surf, camera, mode_modifs, centre, alpha)
 
-        if ModeModifs:
+        if mode_modifs:
             font = pygame.font.Font(media.cheminFichier("fonts/font.ttf"), 10)
 
             imgTexte = font.render('Entree %d' % self.numero_, 1, (255, 255, 255))
             rect = imgTexte.get_rect()
             rect.midtop = self.rect.center
             rect.move_ip(0, -20)
-            surf.blit(imgTexte, camera.RelRect(rect))
+            surf.blit(imgTexte, camera.rel_rect(rect))
 
-            Passage.affiche(self, surf, camera, ModeModifs, centre, alpha)
+            Passage.affiche(self, surf, camera, mode_modifs, centre, alpha)
 
 
 class TuyeauGrand(Tuyeau):
@@ -2745,7 +2742,7 @@ class Chateau(Dessinable):
 
     OrdreDesFeux = ((0, 100), (-80, 80), (80, 80), (0, 50), (100, 120), (-100, 120))
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         if self.partie.phase_decompte and self.partie.compte_a_rebours <= 0:
 
@@ -2795,18 +2792,18 @@ class Chateau(Dessinable):
 
                     self.compteur_feu = FeuDArtifice.duree_detonation
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
         if hasattr(self, 'fanion'):
             # Hissage du drapeau
 
-            relRect = camera.RelRect(self.rect)
+            relRect = camera.rel_rect(self.rect)
             pos = list(relRect.midtop)
             pos[1] -= self.yFanion
             pos[0] -= self.fanion.get_width() // 2
             surf.blit(self.fanion, pos)
 
-        Dessinable.affiche(self, surf, camera, ModeModifs, centre, alpha)
+        Dessinable.affiche(self, surf, camera, mode_modifs, centre, alpha)
 
 
 class ChateauGrand(Dessinable):
@@ -2847,14 +2844,14 @@ class NuageTriple(Nuage):
 
 class ProjectileInterface:
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         joueur.blesse()
         self.tue()
 
 
 class MilieuAquatique(Collidable):
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         if joueur.couleur == -1:
             joueur.couleur = -2  # coco couda en culotte
         joueur.sous_l_eau = max(joueur.sous_l_eau, joueur.rect.bottom - self.rect.top)
@@ -2897,7 +2894,7 @@ class Firebowser(Collidable, ProjectileInterface):
         self.mouve()
 
 
-class AllerRetourable(object):
+class AllerRetourable:
 
     def __init__(self):
 
@@ -2942,9 +2939,9 @@ class AllerRetourable(object):
         if side == HAUT or side == BAS:
             self.speed[1] *= -1
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
-        if ModeModifs:
+        if mode_modifs:
 
             # Affiche le rectangle correspondant au domaine balaye par le mouvement
             rect = self.rect.copy()
@@ -2958,14 +2955,14 @@ class AllerRetourable(object):
                     mouve[1 - i] = 0
                     rect.union_ip(rect.move(mouve))
 
-            rect = camera.RelRect(rect)
+            rect = camera.rel_rect(rect)
             black = pygame.Surface((rect.w, rect.h))
             black.fill((0, 0, 0))
             black.set_alpha(100)
 
             surf.blit(black, rect.topleft)
 
-        Dessinable.affiche(self, surf, camera, ModeModifs, centre, alpha)
+        Dessinable.affiche(self, surf, camera, mode_modifs, centre, alpha)
 
 
 class Poutrelle(AllerRetourable, CollidableBloc):
@@ -3017,7 +3014,7 @@ class Mur(Dessinable):
 class Lave(Collidable):
     nomImages = ["lava.png"]
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         joueur.efface()
 
 
@@ -3117,7 +3114,7 @@ class Ephemere(Dessinable):
         self.compteur -= 1
 
 
-class EnemiInterface(object):
+class EnemiInterface:
     pass
 
 
@@ -3256,7 +3253,7 @@ class FleurCarnivore(Collidable, Intouchable, EnemiInterface):
             self.rafraichit_image()
             self.mouve(collision=False)
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
         if self.cacheeChrono == 1 and ((Vec(joueur.rect.center) - self.rect.center) < self.dist_inhibition):
             # Reste cachee si le perso est a proximite
             self.cacheeChrono += 1
@@ -3264,26 +3261,26 @@ class FleurCarnivore(Collidable, Intouchable, EnemiInterface):
     def blesse(self):
         self.tue()
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
-        Dessinable.affiche(self, surf, camera, ModeModifs=ModeModifs, centre=centre, alpha=alpha)
+        Dessinable.affiche(self, surf, camera, mode_modifs=mode_modifs, centre=centre, alpha=alpha)
 
-        if ModeModifs:
+        if mode_modifs:
             img = self.image.convert()
             img.set_alpha(100)
             rect = self.rect.copy()
             rect.bottom = self.posInit[1]
-            surf.blit(img, camera.RelRect(rect))
+            surf.blit(img, camera.rel_rect(rect))
 
 
 class FleurCarnivore2(FleurCarnivore):
     pass
 
 
-class Sautable(object):
+class Sautable:
     son_ecrase = "smb_stomp.wav"
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         if self.vivant():
 
@@ -3404,15 +3401,15 @@ class Legende(Dessinable):
         self.rectRel = None
         self.vX = vX
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
         self.compteur -= 1
         if self.compteur <= 0:
             self.efface()
         else:
             self.rect.move_ip(0, self.vX)
-            self.rectRel = camera.RelRect(self.rect)
+            self.rectRel = camera.rel_rect(self.rect)
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
         if self.rectRel:
             surf.blit(self.image, self.rectRel)
 
@@ -3455,7 +3452,7 @@ class Mechant(AutoMobile, EnemiInterface):
 
         self.efface()
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         if self.vivant():
 
@@ -3494,7 +3491,7 @@ class EcureuilNuageux(Sautable, Mechant, AllerRetourable):
         if self.retour:
             self.efface()
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         num = self.index_temps % self.frequence_de_tir_
 
@@ -3587,7 +3584,7 @@ class Capsule(Mechant):
             projectile.deplace()
 
 
-class BeteAquatique(object):
+class BeteAquatique:
     """Bete qui doit rester sous l'eau"""
 
     def on_collision(self, side, sprite):
@@ -3645,7 +3642,7 @@ class Calmar(Mechant, BeteAquatique):
         rect = self.image.get_rect()
         rect.top = top
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         DiffPos = Vec(joueur.rect.center) - self.rect.center
 
@@ -3714,15 +3711,15 @@ class Pigeon(Sautable, Mechant):
             if side == BAS:
                 self.vole_ = False
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         if side == HAUT:
-            Sautable.EffetJoueur(self, joueur, side)
+            Sautable.effet_joueur(self, joueur, side)
         else:
             charge_son(self.son_ecrase).play()
             self.tue()
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
         """ s'envole a l'approche du joueur """
         distX = joueur.rect.centerx - self.rect.centerx
         if self._vole:
@@ -3844,7 +3841,7 @@ class Carapace(AutoMobile, Sautable, EnemiInterface):
 
         self.mouve()
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         self.image = self.images[0][0]
 
@@ -4036,7 +4033,7 @@ class Squidge(Sautable, Mechant):
 
     freq = 12
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
         if not random.randrange(70):
             BaddieShot(self.rect.center, joueur.rect.centerx)
 
@@ -4088,7 +4085,7 @@ class PortailMonde(Dessinable, Passage):
         self.chrono_ = 10
         self.decompte_ = True
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         if self.monde_suivant_ and abs(joueur.rect.centerx - self.rect.centerx) <= 2 and abs(
                 joueur.rect.bottom - self.rect.bottom) <= 2:
             joueur.efface()
@@ -4102,12 +4099,12 @@ class PortailMonde(Dessinable, Passage):
         if self.chrono_ == 0:
             raise interruptions.TransferMonde(self.monde_suivant_, Decompte=self.decompte_)
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
-        Dessinable.affiche(self, surf, camera, ModeModifs, centre, alpha)
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
+        Dessinable.affiche(self, surf, camera, mode_modifs, centre, alpha)
 
-        if ModeModifs:
+        if mode_modifs:
             # pygame.draw.line(surf,(250,150,30), relRect.midtop, relRect.midbottom, 3)
-            Passage.affiche(self, surf, camera, ModeModifs, centre, alpha)
+            Passage.affiche(self, surf, camera, mode_modifs, centre, alpha)
 
 
 class BaddieShot(Collidable, ProjectileInterface):
@@ -4144,14 +4141,14 @@ class Canon(CollidableBloc):
         self.frequence_de_tir_ = 135
         self.son_tir_ = 'smb_fireworks.wav'
 
-    def ActionInCamera(self, joueur, camera):
+    def action_in_camera(self, joueur, camera):
 
         if not random.randrange(self.frequence_de_tir_):
 
             charge_son(self.son_tir_).play()
-            joueurX = joueur.rect.centerx
-            coteDroit = joueurX > self.rect.centerx
-            if (coteDroit and self.tire_droite_) or (not coteDroit and self.tire_gauche_):
+            joueur_x = joueur.rect.centerx
+            cote_droit = joueur_x > self.rect.centerx
+            if (cote_droit and self.tire_droite_) or (not cote_droit and self.tire_gauche_):
                 BouletDeCanon(self.rect.topleft, target=joueur.rect.centerx)
 
 
@@ -4226,7 +4223,7 @@ class Piece(Collidable):
         self.efface()
         # ExploPouff(self.rect.center)
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
         self.tue()
         joueur.boursePieces += 1
         joueur.points += self.points
@@ -4306,7 +4303,7 @@ class MatDrapeau(Collidable):
         self.est_declenche = False
         self.posJoueur = None
 
-    def EffetJoueur(self, joueur, side):
+    def effet_joueur(self, joueur, side):
 
         if (joueur.Controle.Haut or self.declenche_fin_niveau_) and joueur.rect.bottom >= self.rect.top:
 
@@ -4336,21 +4333,20 @@ class MatDrapeau(Collidable):
             joueur.auto_pilote = True
             joueur.Controle.Bas = 100
 
-
         elif self.est_declenche:
 
-            maxPosDrapeau = self.rect.h - charge_image(self.image_drapeau_).get_height() - 20
+            max_pos_drapeau = self.rect.h - charge_image(self.image_drapeau_).get_height() - 20
 
             if joueur.rect.bottom < self.rect.bottom - 10:
 
                 if joueur.agrippe:
 
-                    if self.pos_drapeau_ < maxPosDrapeau:
+                    if self.pos_drapeau_ < max_pos_drapeau:
                         self.pos_drapeau_ = int(self.pos_drapeau_ + joueur.speed[1])
 
-                        if self.pos_drapeau_ >= maxPosDrapeau:
+                        if self.pos_drapeau_ >= max_pos_drapeau:
                             # Drapeau est descendu tout en bas du mat.
-                            self.pos_drapeau_ = maxPosDrapeau
+                            self.pos_drapeau_ = max_pos_drapeau
 
                 else:
                     joueur.Controle.Droite = 100
@@ -4364,7 +4360,7 @@ class MatDrapeau(Collidable):
                 elif self.est_declenche <= 1:
                     joueur.agrippe = False
 
-                    points = int(round(5000 * self.pos_drapeau_ / maxPosDrapeau, -2))  # arrondi a la centaine
+                    points = int(round(5000 * self.pos_drapeau_ / max_pos_drapeau, -2))  # arrondi a la centaine
                     if points > 0:
                         joueur.engrange_points(points, pos=self.rect.move(0, -100).bottomright, duree=90)
 
@@ -4374,19 +4370,19 @@ class MatDrapeau(Collidable):
             else:
                 joueur.Controle.Droite = 100
 
-    def affiche(self, surf, camera, ModeModifs=False, centre=None, alpha=None):
+    def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
-        Dessinable.affiche(self, surf, camera, ModeModifs=ModeModifs)
-        imgDrapeau = charge_image(self.image_drapeau_, flip=not self._vers_gauche)
-        rectDrapeau = imgDrapeau.get_rect()
-        rectDrapeau.top = self.pos_drapeau_ + 16 + self.rect.top
+        Dessinable.affiche(self, surf, camera, mode_modifs=mode_modifs)
+        img_drapeau = charge_image(self.image_drapeau_, flip=not self._vers_gauche)
+        rect_drapeau = img_drapeau.get_rect()
+        rect_drapeau.top = self.pos_drapeau_ + 16 + self.rect.top
 
         if self._vers_gauche:
-            rectDrapeau.right = self.rect.centerx - 3
+            rect_drapeau.right = self.rect.centerx - 3
         else:
-            rectDrapeau.left = self.rect.centerx + 3
+            rect_drapeau.left = self.rect.centerx + 3
 
-        surf.blit(imgDrapeau, camera.RelRect(rectDrapeau))
+        surf.blit(img_drapeau, camera.rel_rect(rect_drapeau))
 
 
 Elements = dict(

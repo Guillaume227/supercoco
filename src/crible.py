@@ -6,22 +6,23 @@ class Crible(dict):
     """ Pavage (carres) uniforme du plan de cote self.pas. """
 
     def __init__(self, pas):
+        super(Crible, self).__init__()
         self.pas = pas
-        self.ElemAPaves = {}
+        self.elem_a_paves = {}
 
     def extremas(self):
         """ Coordonnees des paves extremes du crible """
-        Xs, Ys = zip(*self.keys())
-        return min(Xs), min(Ys), max(Xs), max(Ys)
+        xs, ys = zip(*self.keys())
+        return min(xs), min(ys), max(xs), max(ys)
 
-    def Coords(self, arg):
+    def coords(self, arg):
 
         """Recherche dans le crible
             arg peut etre:
              - un couple (point haut, point bas) definissant un rectangle
              - un rectangle pygame.Rect
              
-            Si Ajout est True, ajoute les paves qui n'ont pas deja ete frequentes.
+            Si ajout est True, ajoute les paves qui n'ont pas deja ete frequentes.
 
             
             Renvoie la liste des paves intersectes par arg.
@@ -64,94 +65,93 @@ class Crible(dict):
         xb, xh = sorted((x1, x2))
         yb, yh = sorted((y1, y2))
 
-        Xb, Yb, Xh, Yh = [int(coor) // self.pas for coor in (xb, yb, xh, yh)]
+        xb, yb, xh, yh = [int(coor) // self.pas for coor in (xb, yb, xh, yh)]
 
-        if Xb == xb * self.pas:
-            Xb -= 1
-        if Yb == yb * self.pas:
-            Yb -= 1
+        if xb == xb * self.pas:
+            xb -= 1
+        if yb == yb * self.pas:
+            yb -= 1
 
-        return Xb, Yb, Xh, Yh
+        return xb, yb, xh, yh
 
-    def Paves(self, arg, Ajout=False):
-        Xb, Yb, Xh, Yh = self.Coords(arg)
-        if Ajout:
-            return [self.setdefault((x, y), set()) for x in range(Xb, Xh + 1) for y in range(Yb, Yh + 1)]
+    def paves(self, arg, ajout=False):
+        xb, yb, xh, yh = self.coords(arg)
+        if ajout:
+            return [self.setdefault((x, y), set()) for x in range(xb, xh + 1) for y in range(yb, yh + 1)]
         else:
-            return [self[(x, y)] for x in range(Xb, Xh + 1) for y in range(Yb, Yh + 1) if (x, y) in self]
+            return [self[(x, y)] for x in range(xb, xh + 1) for y in range(yb, yh + 1) if (x, y) in self]
 
-    def Rects(self, arg):
-        Xb, Yb, Xh, Yh = self.Coords(arg)
+    def rects(self, arg):
+        xb, yb, xh, yh = self.coords(arg)
         pas = self.pas
-        return [(x * pas, y * pas, pas, pas) for x in range(Xb, Xh + 1) for y in range(Yb, Yh + 1) if (x, y) in self]
+        return [(x * pas, y * pas, pas, pas) for x in range(xb, xh + 1) for y in range(yb, yh + 1) if (x, y) in self]
 
-    def Intersecte(self, rect, Obj=None):
+    def intersecte(self, rect, obj=None):
         """Assumes rect is a pygame.rect
             and criblable items have a rect member
         """
         res = set()
-        for Ens in self.Paves(rect):
-            res.update(Elem for Elem in Ens if Elem is not Obj and rect.colliderect(Elem.rect))
+        for Ens in self.paves(rect):
+            res.update(Elem for Elem in Ens if Elem is not obj and rect.colliderect(Elem.rect))
 
         return res
 
-    def Insere(self, arg, obj, locInfo=None):
+    def insere(self, arg, obj, loc_info=None):
 
-        if locInfo is None:
-            Paves = self.Paves(arg, Ajout=True)
+        if loc_info is None:
+            paves = self.paves(arg, ajout=True)
         else:
-            Paves = locInfo
+            paves = loc_info
 
-        self.ElemAPaves[obj] = list(Paves)
+        self.elem_a_paves[obj] = list(paves)
 
-        for Pave in Paves:
-            Pave.add(obj)
+        for pave in paves:
+            pave.add(obj)
 
-    def Retire(self, obj, strict=True):
+    def retire(self, obj, strict=True):
 
         if strict:
-            Paves = self.ElemAPaves.pop(obj)
+            paves = self.elem_a_paves.pop(obj)
         else:
-            Paves = self.ElemAPaves.pop(obj, [])
+            paves = self.elem_a_paves.pop(obj, [])
 
-        for Ens in Paves:
-            Ens.discard(obj)
+        for ens in paves:
+            ens.discard(obj)
 
-    def Deplace(self, dest, obj, strict=True):
+    def deplace(self, dest, obj, strict=True):
 
-        self.Retire(obj, strict=strict)
-        self.Insere(dest, obj)
+        self.retire(obj, strict=strict)
+        self.insere(dest, obj)
 
-    def Afficher(self, Surface):
+    def afficher(self, surface):
         import pygame
         couleur = (100, 100, 150)
         pas = self.pas
         for x0, y0 in self:
-            pygame.draw.rect(Surface, couleur, Rect(x0 * pas, y0 * pas, pas, pas), 1)
+            pygame.draw.rect(surface, couleur, Rect(x0 * pas, y0 * pas, pas, pas), 1)
 
-    def Tous(self):
+    def tous(self):
         """ Tous les elements du crible """
         res = set()
-        [res.update(Ens) for Ens in self.values()]
+        [res.update(ens) for ens in self.values()]
         return res
 
-    def Vidange(self):
-        for Ens in self.values():
-            Ens.clear()
+    def vidange(self):
+        for ens in self.values():
+            ens.clear()
 
-        self.ElemAPaves.clear()
+        self.elem_a_paves.clear()
 
-    def Integrite(self):
-        for Ens in iter(self):
-            for obj in Ens:
-                assert Ens in self.ElemAPaves[obj]
+    def verif_integrite(self):
+        for ens in iter(self):
+            for obj in ens:
+                assert ens in self.elem_a_paves[obj]
 
-    def Integrite2(self):
+    def verif_integrite_2(self):
         for x, y in self:
             for a, b in self:
                 if (x - a) ** 2 + (y - b) ** 2 > 2:
-                    Intersection = self[x, y].intersection(self[a, b])
-                    if Intersection:
-                        print(Intersection)
-                        raise ValueError(
-                            'Crible incoherent, %d duplication(s) %d,%d et %d,%d' % (len(Intersection), x, y, a, b))
+                    intersection = self[x, y].intersection(self[a, b])
+                    if intersection:
+                        print(intersection)
+                        raise ValueError(f'Crible incoherent, {len(intersection)} duplication(s) {x},{y} et {a},{b}')

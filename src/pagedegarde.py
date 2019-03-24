@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 from __future__ import absolute_import
 from .elems import ControlePerso
 from pygame.locals import *
@@ -18,12 +16,12 @@ class ChangeLangueExc(Exception):
     pass
 
 
-class Menu(object):
+class Menu:
     """ Menu principal / page de garde du jeu """
 
-    def __init__(self, pleinEcran=False):
+    def __init__(self, plein_ecran):
 
-        self.plein_ecran = pleinEcran
+        self.plein_ecran = plein_ecran
         self.boucle()
 
     @property
@@ -35,7 +33,7 @@ class Menu(object):
         """ Mode d'affichage plein Ecran / fenetre """
 
         self._plein_ecran = val
-        partie.GetEcran(self._plein_ecran)
+        partie.getModeEcran(self._plein_ecran)
         pygame.mouse.set_visible(False)
 
     def actions(self, e):
@@ -49,7 +47,7 @@ class Menu(object):
             if e.key == pygame.K_e:
                 self.plein_ecran = not self.plein_ecran
 
-    def InitMenuOptions(self):
+    def init_menu_options(self):
 
         ecran = pygame.display.get_surface()
         ecran.fill((0, 0, 0))
@@ -58,16 +56,18 @@ class Menu(object):
             img_fond, coin_img = intercalaires.recadre_image(ecran, media.charge_image("Super Coco.jpg"))
             ecran.blit(img_fond, coin_img)
 
-        if os.path.exists(media.cheminFichier('photos')):
-            options = [[langues.Traduc(langues.MENU_Lancer), self.LancerPartie], ]
+        if os.path.exists(media.cheminFichier('photos')) and False:
+            options = [[langues.Traduc(langues.MENU_Lancer), self.lancer_partie_avec_photos], ]
         else:
-            options = [[langues.Traduc(langues.MENU_Lancer), self.LancerPartie], ]
+            options = [[langues.Traduc(langues.MENU_Lancer), self.lancer_partie], ]
 
         options += [[langues.Traduc(langues.MENU_Aide), self.Aide],
-                    [langues.Traduc(langues.MENU_Change_Langue), self.ChangeLangue],
+                    [langues.Traduc(langues.MENU_Change_Langue), self.change_langue],
                     [langues.Traduc(langues.MENU_Quiter), sys.exit], ]
 
-        init_menu = menu.MenuOptions(next(zip(*options)), pos=(ecran.get_size()[0] / 2, 360), centre=True)
+        init_menu = menu.MenuOptions(next(zip(*options)),
+                                     pos=(ecran.get_size()[0] / 2, 360),
+                                     centre=True)
 
         if partie.Partie.Ombre:
             init_menu.couleur_texte_selec = (0, 0, 0)
@@ -80,22 +80,22 @@ class Menu(object):
 
     def boucle(self):
 
-        init_menu, options = self.InitMenuOptions()
+        init_menu, options = self.init_menu_options()
 
         while True:
 
             try:
-                indexOption = init_menu.boucle(self.actions)
-                if indexOption is None:
+                index_option = init_menu.boucle(self.actions)
+                if index_option is None:
                     break
                 else:
-                    options[indexOption][1]()
+                    options[index_option][1]()
 
             except SystemExit:
                 return
 
             except ChangeLangueExc:
-                init_menu, options = self.InitMenuOptions()
+                init_menu, options = self.init_menu_options()
 
             except intercalaires.SautePlanche:
                 pass
@@ -104,15 +104,15 @@ class Menu(object):
                 traceback.print_exc()
                 break
 
-    def aller_au_niveau(self, Niveau=None, ModeModifs=False):
+    def aller_au_niveau(self, niveau=None, mode_modifs=False):
 
-        if Niveau:
-            self.LancerPartie(Niveau, mode_modifs=ModeModifs)
+        if niveau:
+            self.lancer_partie(niveau, mode_modifs=mode_modifs)
 
     def lancer_partie_avec_photos(self, niveau='1-1', mode_modifs=False):
-        self.LancerPartie(niveau=niveau, mode_modifs=mode_modifs, avec_photos=True)
+        self.lancer_partie(niveau=niveau, mode_modifs=mode_modifs, avec_photos=True)
 
-    def LancerPartie(self, niveau='1-1', mode_modifs=False, avec_photos=False):
+    def lancer_partie(self, niveau='1-1', mode_modifs=False, avec_photos=False):
 
         Partie = partie.Partie()
 
@@ -146,6 +146,6 @@ class Menu(object):
 
         return ""
 
-    def ChangeLangue(self):
+    def change_langue(self):
         langues.ChangeLangue()
         raise ChangeLangueExc()

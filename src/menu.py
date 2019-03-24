@@ -10,13 +10,13 @@ class SortieMenu(Exception):
     pass
 
 
-class ElemInterface(object):
+class ElemInterface:
 
-    def __init__(self, pos=(0, 0), fonteH=16, centre=True, alpha_fond=50, imgFond=True, lectureSeule=False):
+    def __init__(self, pos=(0, 0), fonte_H=16, centre=True, alpha_fond=50, img_fond=True, lecture_seule=False):
 
         self.pos = pos
-        self.fonte = pygame.font.Font(media.cheminFichier(media.FONTE_DEFAUT, subdir='fonts'), fonteH)
-        self.fonteH = fonteH
+        self.fonte = pygame.font.Font(media.cheminFichier(media.FONTE_DEFAUT, subdir='fonts'), fonte_H)
+        self.fonte_H = fonte_H
         self.interligne = 4
         self.couleur_texte = [255, 255, 255]
         self.couleur_texte_selec = [255, 0, 0]
@@ -25,7 +25,7 @@ class ElemInterface(object):
         self.hauteur = 0
         self.centre = centre
 
-        self.modifiable = not lectureSeule
+        self.modifiable = not lecture_seule
 
         self.bouton_validation = 1  # bouton souris pour valider les changements / la selection
         self.bouton_anulation = 3  # bouton souris pour annuler les changements / la selection
@@ -36,7 +36,7 @@ class ElemInterface(object):
 
         self.surface_dest = pygame.display.get_surface()
 
-        if imgFond:
+        if img_fond:
             # Ombre l'image de fond pour une meilleure lisibilite par contraste
             self.img_fond = self.surface_dest.convert_alpha()
 
@@ -97,9 +97,9 @@ class ElemInterface(object):
         # Change le parametre de repetition des touches enfoncees,
         # et retabli la valeur preexistante en sortant.
 
-        RepetitionExt = pygame.key.get_repeat()
+        repetition_ext = pygame.key.get_repeat()
         pygame.key.set_repeat(*self.repetition_clavier)
-        self.repetition_clavier = RepetitionExt
+        self.repetition_clavier = repetition_ext
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.__enter__()
@@ -145,8 +145,8 @@ class ElemInterface(object):
 
                         # Sortie validant les changements / la selection
                         if (e.type not in (pygame.MOUSEBUTTONUP, pygame.JOYBUTTONUP)) ^ sortie_armee:
-                            self.alafin()
-                            return self.valeur
+                            return self.alafin()
+
                     else:
                         sortie_armee = False
 
@@ -165,15 +165,15 @@ class ElemInterface(object):
                 pygame.display.flip()
 
     def alafin(self):
-        pass
+        return self.valeur
 
 
-class InterfaceDeroulant(object):
+class InterfaceDeroulant:
     """
         propriete de defilement des champs d'un menu sous forme de liste dont la longeur excede la hauteur de l'ecran.
     """
 
-    def __init__(self, options, legende, multi_selection=False, editable=True, forceListe=False):
+    def __init__(self, options, legende, multi_selection=False, editable=True, force_liste=False):
         """
             forceListe : True: renvoie une liste d'index meme dans le cas multiselection = False
         """
@@ -188,7 +188,7 @@ class InterfaceDeroulant(object):
         self._haut_index = 0  # index dans self.champs du premier element affiche en haut de l'ecran
         self.selection_index = [0]  # index des elements selectionnes
         self.multi_selection = multi_selection
-        self.forceListe = forceListe
+        self.force_liste = force_liste
 
     @property
     def haut_index(self):
@@ -197,9 +197,9 @@ class InterfaceDeroulant(object):
 
     @haut_index.setter
     def haut_index(self, Val):
-        nombChamps = len(self.champs)
-        nombChampsVisibles = self.nombChampsVisibles()
-        self._haut_index = min(max(0, Val), nombChamps - nombChampsVisibles)
+        nomb_champs = len(self.champs)
+        nomb_champs_visibles = self.nombChampsVisibles()
+        self._haut_index = min(max(0, Val), nomb_champs - nomb_champs_visibles)
 
     def pos_index(self, pos):
         return min(len(self.champs), max(0, int((pos[1] - self.pos[1]) / self.ecart_ligne) + self.haut_index - len(
@@ -224,7 +224,7 @@ class InterfaceDeroulant(object):
 
         if e.type == pygame.MOUSEBUTTONDOWN and e.button in (4, 5):
 
-            Increment = IncrementPourEvent(e, flechesHautBas=True)
+            Increment = increment_pour_event(e, fleches_haut_bas=True)
 
             if Increment:
                 self.haut_index = self.haut_index + Increment
@@ -238,7 +238,7 @@ class InterfaceDeroulant(object):
 
         else:
 
-            Increment = IncrementPourEvent(e, flechesHautBas=True)
+            Increment = increment_pour_event(e, fleches_haut_bas=True)
 
             if Increment:
 
@@ -308,33 +308,33 @@ class InterfaceDeroulant(object):
             if self.valeur != self.selection_index:
                 self.valeur = list(set(self.selection_index))
 
-                nombChampsVisibles = self.nombChampsVisibles()
+                nomb_champs_visibles = self.nombChampsVisibles()
 
-                if nombChampsVisibles < len(self.champs):
+                if nomb_champs_visibles < len(self.champs):
                     ref_index = self.selection_index[-1]
-                    self.haut_index = ref_index - nombChampsVisibles / 2  # la selection se trouve au centre de l'ecran
+                    self.haut_index = ref_index - nomb_champs_visibles / 2  # la selection se trouve au centre de l'ecran
 
         return maj_valeur
 
     def alafin(self):
 
-        if not self.multi_selection and not self.forceListe:
+        if not self.multi_selection and not self.force_liste:
             # Renvoie un seul index plutot qu'une liste
             if self.valeur:
                 if isinstance(self.valeur, list):
-                    self.valeur = self.valeur[0]
+                    return self.valeur[0]
 
             else:
-                self.valeur = None
+                return None
 
 
 class MenuOptions(InterfaceDeroulant, ElemInterface):
     """ Liste verticale d'options affichees en lignes de texte """
 
-    def __init__(self, options, legende=[], pos=(0, 0), centre=True, forceListe=False, **kwargs):
+    def __init__(self, options, legende=(), pos=(0, 0), centre=True, force_liste=False, **kwargs):
 
         ElemInterface.__init__(self, pos, centre=centre, **kwargs)
-        InterfaceDeroulant.__init__(self, options, legende, forceListe=forceListe)
+        InterfaceDeroulant.__init__(self, options, legende, force_liste=force_liste)
 
         self.valeur = self.selection_index
 
@@ -345,7 +345,7 @@ class MenuOptions(InterfaceDeroulant, ElemInterface):
         for i, ligne in enumerate(self.legende):
             self.affiche_ligne(surf_dest, ligne, i, centre=False)
 
-        lignesLegende = len(self.legende)
+        lignes_legende = len(self.legende)
 
         for j, option in enumerate(self.champs[self.haut_index:]):
 
@@ -356,7 +356,7 @@ class MenuOptions(InterfaceDeroulant, ElemInterface):
             else:
                 clr = self.couleur_texte
 
-            self.affiche_ligne(surf_dest, option, lignesLegende + j, clr, centre=self.centre)
+            self.affiche_ligne(surf_dest, option, lignes_legende + j, clr, centre=self.centre)
 
 
 class BoiteMessage(ElemInterface):
@@ -383,56 +383,56 @@ def nom_touche(val):
         return caractere
 
 
-def convertisseur(vieilVal, novVal):
-    if isinstance(vieilVal, bool):
+def convertisseur(vieil_val, nov_val):
+    if isinstance(vieil_val, bool):
 
-        return novVal.lower() == 'oui'
+        return nov_val.lower() == 'oui'
 
-    elif vieilVal is None:
+    elif vieil_val is None:
 
-        if novVal == '':
+        if nov_val == '':
             return None
-        elif novVal.lower() == 'none':
-            return eval(novVal)
+        elif nov_val.lower() == 'none':
+            return eval(nov_val)
         else:
-            return novVal
+            return nov_val
 
-    elif isinstance(vieilVal, (tuple, list)):
+    elif isinstance(vieil_val, (tuple, list)):
 
-        if novVal == '':
-            novVal = type(vieilVal)()  # sequence vide
+        if nov_val == '':
+            nov_val = type(vieil_val)()  # sequence vide
 
         else:
 
             valeurs = []
 
-            for i, val in enumerate(novVal.replace(',', ' ').split()):
+            for i, val in enumerate(nov_val.replace(',', ' ').split()):
 
-                if len(vieilVal) > 0:
-                    if i >= len(vieilVal):
+                if len(vieil_val) > 0:
+                    if i >= len(vieil_val):
                         oldI = -1
                     else:
                         oldI = i
 
-                    val = convertisseur(vieilVal[oldI], val)
+                    val = convertisseur(vieil_val[oldI], val)
 
                 valeurs.append(val)
 
-            novVal = valeurs
+            nov_val = valeurs
 
-    valType = type(vieilVal)
+    val_type = type(vieil_val)
 
-    if isinstance(novVal, (list, tuple)):
-        if valType not in [list, tuple]:
+    if isinstance(nov_val, (list, tuple)):
+        if val_type not in [list, tuple]:
             # cas des vect2d.Vec
-            return type(vieilVal)(*novVal)
+            return type(vieil_val)(*nov_val)
 
-    return type(vieilVal)(novVal)
+    return type(vieil_val)(nov_val)
 
 
 class ChampParent(ElemInterface):
 
-    def __init__(self, valeur, legende=[''], AligneDroit=0, lectureSeule=False, valeur_multi=False, **kwargs):
+    def __init__(self, valeur, legende=('',), AligneDroit=0, lecture_seule=False, valeur_multi=False, **kwargs):
 
         ElemInterface.__init__(self, **kwargs)
 
@@ -447,14 +447,14 @@ class ChampParent(ElemInterface):
         self.valeur_multi = self.valeur_multi_init = valeur_multi
 
         self.val_temp = None
-        self.modifiable = not lectureSeule
+        self.modifiable = not lecture_seule
         self.aligne_droit = AligneDroit
         self.curseur_pos = 0  # position depuis la droite
 
     def __str__(self):
         return self.__class__.__name__, self.legende[0]
 
-    def EstModifie(self):
+    def est_modifie(self):
         return self.val_temp is not None or self.valeurInit != self.valeur or self.valeur_multi != self.valeur_multi_init
 
     def valide(self):
@@ -473,36 +473,33 @@ class ChampParent(ElemInterface):
                 traceback.print_exc()
                 pass
 
-    def alafin(self):
-        pass
-
     def __valAff__(self):
         """ Convertit la valeur en caracteres a afficher """
 
         if self.val_temp is not None:
-            valAff = self.val_temp
+            val_aff = self.val_temp
 
         elif self.valeur is True:
-            valAff = 'Oui'
+            val_aff = 'Oui'
 
         elif self.valeur is False:
-            valAff = 'Non'
+            val_aff = 'Non'
         # elif self.valeur is None:
-        #    valAff = ''
+        #    val_aff = ''
 
         elif isinstance(self.valeur, type):
-            valAff = self.valeur.__name__
+            val_aff = self.valeur.__name__
 
         elif isinstance(self.valeur, (tuple, list)):
-            valAff = ', '.join('%.2f' % Val if isinstance(Val, float) else str(Val) for Val in self.valeur)
+            val_aff = ', '.join('%.2f' % val if isinstance(val, float) else str(val) for val in self.valeur)
 
         elif isinstance(self.valeur, float):
-            valAff = '%.2f' % self.valeur
+            val_aff = '%.2f' % self.valeur
 
         else:
-            valAff = str(self.valeur)
+            val_aff = str(self.valeur)
 
-        return valAff
+        return val_aff
 
     def affiche(self, surface, index_decal=0):
 
@@ -510,25 +507,25 @@ class ChampParent(ElemInterface):
             if self.aligne_droit:
                 ligne = ligne.rjust(self.aligne_droit)
 
-            tailleL = self.affiche_ligne(surface, ligne, index_ligne=i + index_decal)[0]
+            taille_l = self.affiche_ligne(surface, ligne, index_ligne=i + index_decal)[0]
 
-        valAff = self.__valAff__()
+        val_aff = self.__valAff__()
 
         if hasattr(self, 'choix'):
-            valAff = '<' + valAff + '>'
+            val_aff = '<' + val_aff + '>'
 
         elif self.modifiable:
             # Ajout du curseur
-            index = len(valAff) - self.curseur_pos
-            valAff = valAff[:index] + '|' + valAff[index:]
+            index = len(val_aff) - self.curseur_pos
+            val_aff = val_aff[:index] + '|' + val_aff[index:]
 
         if self.valeur_multi:
-            valAff = '                           <diff>  ' + valAff
+            val_aff = '                           <diff>  ' + val_aff
 
-        self.affiche_ligne(surface, valAff, index_ligne=i + index_decal, decalage=[15 + tailleL, 0])
+        self.affiche_ligne(surface, val_aff, index_ligne=i + index_decal, decalage=[15 + taille_l, 0])
 
 
-def IncrementeUnReel(valeur, increment, minZero=.01, facteur=1.1):
+def incremente_un_reel(valeur, increment, minZero=.01, facteur=1.1):
     if valeur:
         valeur *= facteur if (increment == 1) ^ (valeur < 0) else 1. / facteur
         if abs(valeur) < minZero:
@@ -549,20 +546,20 @@ class BoiteTexte(ChampParent):
         if not self.modifiable:
             return
 
-        Increment = IncrementPourEvent(e, flechesHautBas=False)
+        increment = increment_pour_event(e, fleches_haut_bas=False)
 
-        if Increment and e.type == pygame.MOUSEBUTTONDOWN:
+        if increment and e.type == pygame.MOUSEBUTTONDOWN:
             # Incrementation de valeurs numeriques a la molette
 
             if self.val_temp:
                 self.valide()
 
             if isinstance(self.valeur, int):
-                self.valeur += Increment
+                self.valeur += increment
                 self.valeur_multi = False
 
             elif isinstance(self.valeur, float):
-                self.valeur = IncrementeUnReel(self.valeur, Increment)
+                self.valeur = incremente_un_reel(self.valeur, increment)
                 self.valeur_multi = False
 
             elif isinstance(self.valeur, (list, tuple)):
@@ -570,53 +567,53 @@ class BoiteTexte(ChampParent):
                 for i, val in enumerate(self.valeur):
 
                     if isinstance(val, int):
-                        self.valeur[i] += Increment
+                        self.valeur[i] += increment
                         self.valeur_multi = False
 
                     elif isinstance(val, float):
-                        self.valeur[i] = IncrementeUnReel(self.valeur[i], Increment)
+                        self.valeur[i] = incremente_un_reel(self.valeur[i], increment)
                         self.valeur_multi = False
 
         elif e.type == pygame.KEYDOWN:
 
-            novVal = None
+            nov_val = None
 
             if e.key in (pygame.K_KP_ENTER, pygame.K_RETURN, pygame.K_UP, pygame.K_DOWN):
                 # Validation de ce qu'entre l'utilisateur
                 self.valide()
 
-            if Increment:
+            if increment:
                 # Deplacement du curseur
 
-                valAff = self.__valAff__()
-                valAffLon = len(valAff)
+                val_aff = self.__valAff__()
+                val_aff_lon = len(val_aff)
 
-                self.curseur_pos += Increment
+                self.curseur_pos += increment
 
                 if e.mod & pygame.KMOD_CTRL:
                     # saute d'un separateur a l'autre ou bien en bout de chaine si aucun separateur n'est trouve.
 
-                    indexGauche = valAffLon - 1 - self.curseur_pos
+                    index_gauche = val_aff_lon - 1 - self.curseur_pos
 
-                    if Increment > 0:
+                    if increment > 0:
                         # recherche depuis la droite, curseur se deplace vers la gauche.
-                        indexes = [valAff.rfind(car, 0, indexGauche) for car in '., ']
+                        indexes = [val_aff.rfind(car, 0, index_gauche) for car in '., ']
                         indexes = [index for index in indexes if index > -1]
 
-                        indexGauche = max(indexes) if indexes else 0
+                        index_gauche = max(indexes) if indexes else 0
 
                     else:
                         # recherche depuis la gauche
 
-                        indexes = [valAff.find(car, indexGauche) for car in '., ']
+                        indexes = [val_aff.find(car, index_gauche) for car in '., ']
                         indexes = [index for index in indexes if index > -1]
 
-                        indexGauche = min(indexes) if indexes else valAffLon - 1
+                        index_gauche = min(indexes) if indexes else val_aff_lon - 1
 
-                    self.curseur_pos = valAffLon - 1 - indexGauche
+                    self.curseur_pos = val_aff_lon - 1 - index_gauche
 
-                if valAffLon:
-                    self.curseur_pos %= valAffLon
+                if val_aff_lon:
+                    self.curseur_pos %= val_aff_lon
                 else:
                     self.curseur_pos = 0
 
@@ -624,20 +621,19 @@ class BoiteTexte(ChampParent):
 
                 if e.mod & pygame.KMOD_CTRL:
                     # efface le champ entier.
-                    novVal = ''
+                    nov_val = ''
                 else:
-                    novVal = self.__valAff__()
-                    DelIndex = len(novVal) - self.curseur_pos
+                    nov_val = self.__valAff__()
+                    DelIndex = len(nov_val) - self.curseur_pos
 
-                    novVal = novVal[:DelIndex - 1] + novVal[DelIndex:]
-
+                    nov_val = nov_val[:DelIndex - 1] + nov_val[DelIndex:]
 
             elif e.key == pygame.K_DELETE:
-                novVal = self.__valAff__()
-                DelIndex = len(novVal) - self.curseur_pos
+                nov_val = self.__valAff__()
+                DelIndex = len(nov_val) - self.curseur_pos
                 self.curseur_pos -= 1
                 self.curseur_pos = max(self.curseur_pos, 0)
-                novVal = novVal[:DelIndex] + novVal[DelIndex + 1:]
+                nov_val = nov_val[:DelIndex] + nov_val[DelIndex + 1:]
 
             else:
 
@@ -649,17 +645,17 @@ class BoiteTexte(ChampParent):
                     # if Maj:
                     #    val = val.upper()
 
-                    novVal = self.__valAff__()
-                    index = len(novVal) - self.curseur_pos
-                    novVal = novVal[:index] + val + novVal[index:]
+                    nov_val = self.__valAff__()
+                    index = len(nov_val) - self.curseur_pos
+                    nov_val = nov_val[:index] + val + nov_val[index:]
 
-            if novVal is not None:
-                self.val_temp = novVal
+            if nov_val is not None:
+                self.val_temp = nov_val
 
 
 class ChampChoix(ChampParent):
 
-    def __init__(self, valeur, choix=[True, False], alpha_fond=100, **kwargs):
+    def __init__(self, valeur, choix=(True, False), alpha_fond=100, **kwargs):
 
         ChampParent.__init__(self, valeur, alpha_fond=alpha_fond, **kwargs)
         self.choix = choix
@@ -670,11 +666,11 @@ class ChampChoix(ChampParent):
         if self.modifiable:
 
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
-                Increment = 1
+                increment = 1
             else:
-                Increment = IncrementPourEvent(e)
+                increment = increment_pour_event(e)
 
-            if Increment:
+            if increment:
 
                 if self.valeur not in self.choix:
                     self.valeur = self.choix[0]
@@ -684,24 +680,23 @@ class ChampChoix(ChampParent):
 
                     if e.type == pygame.KEYDOWN and e.mod & pygame.KMOD_CTRL:
                         # aller directement au debut / fin de la liste
-                        Index = 0 if Increment < 0 else -1
+                        index = 0 if increment < 0 else -1
                     else:
-                        Index = self.choix.index(self.valeur) + Increment
+                        index = self.choix.index(self.valeur) + increment
 
-                    nombChoix = len(self.choix)
-                    self.valeur = self.choix[Index % nombChoix]
+                    nomb_choix = len(self.choix)
+                    self.valeur = self.choix[index % nomb_choix]
                     self.valeur_multi = False
-
 
             elif e.type == pygame.KEYDOWN:
                 # Choix qui commence par la touche frappee
 
                 val = e.unicode
 
-                for premiereLettre in val, val.lower():
+                for premiere_lettre in val, val.lower():
 
                     for ch in self.choix:
-                        if ch != self.valeur and str(ch).startswith(premiereLettre):
+                        if ch != self.valeur and str(ch).startswith(premiere_lettre):
                             self.valeur = ch
                             self.valeur_multi = False
                             break
@@ -711,13 +706,13 @@ class ChampChoix(ChampParent):
                     break
 
 
-def IncrementPourEvent(e, flechesHautBas=False):
+def increment_pour_event(e, fleches_haut_bas=False):
     if e.type == pygame.KEYDOWN:
 
-        if flechesHautBas and e.key in (pygame.K_UP, pygame.K_DOWN):
+        if fleches_haut_bas and e.key in (pygame.K_UP, pygame.K_DOWN):
             return -1 if e.key == pygame.K_UP else 1
 
-        elif not flechesHautBas and e.key in (pygame.K_LEFT, pygame.K_RIGHT):
+        elif not fleches_haut_bas and e.key in (pygame.K_LEFT, pygame.K_RIGHT):
             return -1 if e.key == pygame.K_RIGHT else 1
 
     elif e.type == pygame.MOUSEBUTTONDOWN and e.button in (4, 5):
@@ -726,18 +721,18 @@ def IncrementPourEvent(e, flechesHautBas=False):
 
     elif e.type in (pygame.JOYHATMOTION, pygame.JOYAXISMOTION):
 
-        valueY = None
+        value_y = None
 
         if e.type == pygame.JOYHATMOTION:
-            valueY = -e.value[1]
+            value_y = -e.value[1]
 
         elif e.axis % 2:  # suppose que les axes verticaux sont impairs
-            valueY = e.value
+            value_y = e.value
 
-        if valueY:
-            if round(valueY) == 1:
+        if value_y:
+            if round(value_y) == 1:
                 return 1
-            elif round(valueY) == -1:
+            elif round(value_y) == -1:
                 return -1
 
 
@@ -746,12 +741,12 @@ class ChampNomMonde(BoiteTexte):
 
     def mettre_a_jour(self, e):
 
-        vieilleVal = self.val_temp
+        vieille_val = self.val_temp
 
         BoiteTexte.mettre_a_jour(self, e)
 
         if self.val_temp:
             for c in self.val_temp:
                 if not (c.isalnum() or c in ' =-_'):
-                    self.val_temp = vieilleVal
+                    self.val_temp = vieille_val
                     break

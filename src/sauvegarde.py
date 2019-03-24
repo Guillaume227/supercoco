@@ -46,7 +46,7 @@ def SelectObjet(defaut='', liste=[], Legende=None, choixNouveau=True, valideExis
     else:
         legende = Legende
         
-    menuChoix = menu.MenuOptions( choix, legende=[legende], pos=(5,5), centre=False, forceListe=True )
+    menuChoix = menu.MenuOptions(choix, legende=[legende], pos=(5,5), centre=False, force_liste=True)
     
     AEffacer = []
     

@@ -13,7 +13,7 @@ import copyreg
 suffixe = '.monde'
 
 
-class Monde(object):
+class Monde:
 
     def __init__(self, nom='NouveauMonde'):
 
