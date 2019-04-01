@@ -12,11 +12,11 @@ class SortieMenu(Exception):
 
 class ElemInterface:
 
-    def __init__(self, pos=(0, 0), fonte_H=16, centre=True, alpha_fond=50, img_fond=True, lecture_seule=False):
+    def __init__(self, pos=(0, 0), fonte_h=16, centre=True, alpha_fond=50, img_fond=True, lecture_seule=False):
 
         self.pos = pos
-        self.fonte = pygame.font.Font(media.cheminFichier(media.FONTE_DEFAUT, subdir='fonts'), fonte_H)
-        self.fonte_H = fonte_H
+        self.fonte = pygame.font.Font(media.cheminFichier(media.FONTE_DEFAUT, subdir='fonts'), fonte_h)
+        self.fonte_h = fonte_h
         self.interligne = 4
         self.couleur_texte = [255, 255, 255]
         self.couleur_texte_selec = [255, 0, 0]
@@ -750,3 +750,205 @@ class ChampNomMonde(BoiteTexte):
                 if not (c.isalnum() or c in ' =-_'):
                     self.val_temp = vieille_val
                     break
+
+
+def EditFields(item):
+    import inspect
+
+    props = [name for name, memberType in inspect.getmembers(type(item)) if isinstance(memberType, property)]
+
+    stripped_props = set(propname.strip('_') for propname in props)
+
+    memberVars = [arg for arg in vars(item) if arg.strip('_') not in stripped_props]
+
+    return sorted(memberVars + props)
+
+
+def getVal(elem, AttrName):
+    valeur = getattr(elem, AttrName)
+    if callable(valeur):
+        import inspect
+        if not inspect.isclass(valeur):
+            valeur = valeur()
+
+    return valeur
+
+
+class EditeurElem(ElemInterface, InterfaceDeroulant):
+
+    def __init__(self, elems, pos=(10, 10), attributs=None, choixPourChamps={}, filtre_=False, **kwargs):
+
+        ElemInterface.__init__(self, pos=pos, **kwargs)
+
+        self.elems = list(elems)
+
+        self.modifie = False
+
+        legende = 'Edition de '
+
+        if len(elems) == 1:
+            legende += '%s' % str(self.elems[-1])
+        else:
+            legende += '%d  %s' % (len(self.elems), type(self.elems[-1]).__name__)
+
+        lignes_legende = [legende]
+        self.bouton_validation = 2  # bouton souris pour valider les changements / la selection
+
+        ref_elem = self.elems[0]
+
+        if attributs is None:
+            if hasattr(self.elems[0], '_champs_description_'):
+                attr_editables = self.elems[0]._champs_description_
+            else:
+                attr_editables = EditFields(ref_elem)
+        else:
+            attr_editables = attributs
+
+        self.choix_pour_champs = choixPourChamps
+
+        nom_champs = []
+        for AttrName in attr_editables:
+            AttrName = AttrName.strip('_')
+
+            nom_champs.append(AttrName)
+
+        legend_long = [self.fonte.render(NomChamp, 1, self.couleur_texte).get_width() for NomChamp in nom_champs]
+        max_l = max(legend_long)
+
+        extra_args = dict(imgFond=False)
+
+        ecart_ligne = self.ecart_ligne
+
+        champs = []
+
+        num_lignes_legende = len(lignes_legende)
+
+        for i, (AttrName, NomChamp, LongChamp) in enumerate(zip(attr_editables, nom_champs, legend_long)):
+
+            if filtre_ and AttrName[-1] != '_':
+                continue
+
+            valeur = getVal(self.elems[0], AttrName)
+
+            valeur_multi = any(valeur != getVal(Elem, AttrName) for Elem in self.elems[1:])
+
+            pos = self.pos[0] + max_l - LongChamp, self.pos[1] + (i + num_lignes_legende) * ecart_ligne
+
+            extra_args['pos'] = pos
+            extra_args['legende'] = [NomChamp]
+            extra_args['lectureSeule'] = AttrName.endswith('__')
+            extra_args['valeur_multi'] = valeur_multi
+            extra_args['fonteH'] = self.fonteH
+
+            if AttrName in self.choix_pour_champs:
+                champ = ChampChoix(valeur, choix=self.choix_pour_champs[AttrName], **extra_args)
+
+            elif hasattr(type(valeur), 'EnsembleValeurs'):
+                champ = ChampChoix(valeur, choix=type(valeur).EnsembleValeurs, **extra_args)
+
+            elif isinstance(valeur, bool):
+                champ = ChampChoix(valeur, **extra_args)
+
+            else:
+                champ = BoiteTexte(defaut=valeur, **extra_args)
+
+            champs.append((AttrName, champ))
+
+        InterfaceDeroulant.__init__(self, champs, lignes_legende)
+
+    def alafin(self):
+
+        if len(self.elems) > 1:
+            mods = pygame.key.get_mods()
+            uniformiser = mods & pygame.KMOD_CTRL
+        else:
+            uniformiser = False
+
+        attr_modifies = set()
+
+        if uniformiser:
+            print()
+            print(f'Uniformisation de {len(self.elems)} {type(self.elems[0])}')
+
+        else:
+
+            for attr_name, champ in self.champs:
+
+                if not champ.valeur_multi:
+                    if any(champ.valeur != getVal(Elem, attr_name) for Elem in self.elems):
+                        attr_modifies.add(attr_name)
+
+            if attr_modifies and len(self.elems) > 1:
+                print('Champs Modifies :', '\n'.join(attr_modifies))
+
+        for attr_name, champ in self.champs:
+
+            if uniformiser or attr_name in attr_modifies:
+
+                for elem in self.elems:
+
+                    vieilVal = getattr(elem, attr_name)
+                    novVal = champ.valeur
+
+                    if vieilVal != novVal:
+
+                        print('Modif %s.%s %s ->' % (elem, attr_name, vieilVal))
+
+                        if not hasattr(type(novVal), 'EnsembleValeurs'):
+                            try:
+                                novVal = copy.copy(novVal)
+                            except:
+                                pass
+
+                        setattr(elem, attr_name, novVal)
+
+                        print(getattr(elem, attr_name))
+
+                        self.modifie = True
+
+    def affiche(self, surface):
+
+        for i, ligne in enumerate(self.legende):
+            self.affiche_ligne(surface, ligne, i)
+
+        for j, (_AttrName, champ) in enumerate(self.champs[self.haut_index:]):
+
+            index = self.haut_index + j
+
+            if index in self.selection_index:
+                champ.couleur_texte = self.couleur_texte_selec
+                if self.modifiable and champ.modifiable is None:
+                    champ.modifiable = True
+            else:
+                champ.couleur_texte = self.couleur_texte
+                if champ.modifiable:
+                    champ.modifiable = None
+
+            champ.affiche(surface, index_decal=-self.haut_index)
+
+    def mettre_a_jour(self, e):
+
+        if InterfaceDeroulant.mettre_a_jour(self, e):
+            return True
+
+        elif self.modifiable:
+
+            increment = increment_pour_event(e, fleches_haut_bas=True)
+
+            fonc_sous_champ = self.champs[self.selection_index[-1]][1].mettre_a_jour
+
+            if increment:
+
+                mods = pygame.key.get_mods()
+
+                if mods & pygame.KMOD_CTRL or pygame.mouse.get_pressed()[1]:
+                    # l'evenement s'applique au sous champ plutot qu'au defilement de la selection des sous-champs.
+                    return fonc_sous_champ(e)
+
+                else:
+                    return False
+
+            else:
+                return fonc_sous_champ(e)
+
+        return False

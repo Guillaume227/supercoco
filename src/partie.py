@@ -1,5 +1,5 @@
-from __future__ import print_function
-from __future__ import absolute_import
+#! /usr/bin/env python
+
 import sys
 
 import pygame
@@ -17,6 +17,13 @@ from . import langues
 from .interruptions import MortJoueur, TransferMonde, InterruptionDePartie
 
 from . import niveau
+from .vect2d import Vec
+
+try:
+    from . import palette
+    EDITABLE = True
+except:
+    EDITABLE = False
 
 
 def getModeEcran(plein_ecran):
@@ -116,11 +123,11 @@ class Partie:
         self._affiche_stats = False
         self.phase_decompte = False
         self.photos_deja_vues = set()
-
+        self.mode_modifs = False
         self.grilleRef = None
         self.selection_elem = []
         self.SelectionMotif = []
-
+        self.monde_modifie = False
         self.couleur_selection = pygame.Color(0, 255, 0, 100)
         self._affiche_crible = False
         self.avec_photos = False
@@ -130,13 +137,12 @@ class Partie:
         self.ecranH = ecran.get_height()
         self.ecranL = ecran.get_width()
 
-        self._plein_ecran = True
+        self._plein_ecran = False
 
         # mode pas a pas, i.e. action image par image, utile pour le deverolage
         self.pas_a_pas = None
 
         self.crible = None
-        self.compte_a_rebours = 0
 
         self._sauvegarde_possible = True
 
@@ -250,7 +256,7 @@ class Partie:
         ecran = pygame.display.get_surface()
         ecran.fill((0, 0, 0))
 
-        if self.avec_photos and self.niveau.nom not in self.photos_deja_vues:
+        if self.avec_photos and self.niveau.nom not in self.PhotosDejaVues and not self.mode_modifs:
             sons = ["smb_coin.wav",
                     "smb_powerup.wav",
                     "1up.ogg",
@@ -302,7 +308,10 @@ class Partie:
             ecran.blit(ren, (centre_x * 1.1 - ren.get_width() / 2, centre_y))
 
         pygame.display.flip()
-        pause = 2500
+        if self.mode_modifs or not affiche:
+            pause = 500
+        else:
+            pause = 2500
 
         pygame.time.wait(pause)
         if self.niveau.musique_:
@@ -366,14 +375,17 @@ class Partie:
 
         self.camera.maj(self.perso.rect.center)
 
+        self._sauvegarde_possible = self.mode_modifs
+
     def place_joueur(self, entree):
         # Placement du joueur selon le point d'entree du niveau
         if entree == 0:
             # positionnement au debut du niveau
             self.perso.rect.bottomleft = self.niveau.posDepart.rect.bottomleft
-            self.perso.insere()
+            if not self.mode_modifs:
+                self.perso.insere()
 
-        else:
+        elif not self.mode_modifs:
             # numero de tuyeau
             self.perso.rect.bottomleft = self.niveau.posDepart.rect.bottomleft
             for Elem in self.niveau.Elements:
@@ -391,7 +403,7 @@ class Partie:
 
         # for s in self.crible.Intersecte(self.camera.rect):
         # l'ordre d'affichage des elements selon leur position dans self.elems
-        # est essentiel
+        # est essentielcccc
         elems = self.crible.intersecte(self.camera.rect)
         ecran = pygame.display.get_surface()
         for elem in self.ordonne_elems(elems):
@@ -430,7 +442,9 @@ class Partie:
                 # self.crible.Integrite()
                 # self.elems.integrite()
 
-            if not self.en_pause and (self.pas_a_pas is None or self.pas_a_pas):
+            if not self.en_pause and not self.mode_modifs and (self.pas_a_pas is None or self.pas_a_pas):
+
+                self._sauvegarde_possible = False
 
                 if self.pas_a_pas is True and not pygame.key.get_pressed()[K_SPACE]:
                     self.pas_a_pas = False
@@ -580,6 +594,105 @@ class Partie:
             if self._affiche_crible:
                 self.affiche_crible()
 
+            # Mode Modifications
+            if self.mode_modifs:
+
+                mods = pygame.key.get_mods()
+
+                # Deplacement de la camera avec les fleches clavier
+
+                dX = 0
+                dY = 0
+
+                if self.perso.Controle.Haut:
+                    dY -= 1
+                if self.perso.Controle.Bas:
+                    dY += 1
+                if self.perso.Controle.Gauche:
+                    dX -= 1
+                if self.perso.Controle.Droite:
+                    dX += 1
+
+                if mods & pygame.KMOD_ALT:
+                    if mods & pygame.KMOD_SHIFT:
+                        # Deplacement de la selection
+
+                        dP = dX, dY
+                        if dX or dY:
+                            for elem in self.selection_elem:
+                                elem.deplace(dP, mode_modifs=True)
+                                self.monde_modifie = True
+
+                else:
+                    if mods & pygame.KMOD_CTRL:
+                        # Deplacement de la camera avec la souris
+
+                        # Boutton3Presse = pygame.mouse.get_pressed()[2]
+                        pos_souris = pygame.mouse.get_pos()
+                        marge_souris = 20
+
+                        derive = 1
+                        if 0 < pos_souris[1] < marge_souris:
+                            dY -= derive
+                        if self.TailleEcran[1] - 1 > pos_souris[1] > self.TailleEcran[1] - marge_souris:
+                            dY += derive
+                        if 0 < pos_souris[0] < marge_souris:
+                            dX -= derive
+                        if self.TailleEcran[0] - 1 > pos_souris[0] > self.TailleEcran[0] - marge_souris:
+                            dX += derive
+
+                    if dX or dY:
+
+                        derive = 4
+                        if self.perso.Controle.BoutonB:
+                            derive *= 2
+
+                        dX *= derive
+                        dY *= derive
+
+                        self.camera.deplace(dX, dY)
+
+                pos_souris = pygame.mouse.get_pos()
+
+                mouse_button_state = pygame.mouse.get_pressed()
+
+                mods = pygame.key.get_mods()
+
+                temp_select = []
+                if self.clic_precedent and mouse_button_state[0]:
+                    # Dessinons le Carre de selection
+                    clic_prec_rel = self.camera.rel_point(self.clic_precedent)
+                    rect_select = Rect(rect_from_points(clic_prec_rel, pos_souris))
+                    pygame.draw.rect(ecran, self.couleur_selection, rect_select, 1)
+
+                    temp_select = self.select_elem(clic_prec_rel, pos_souris)
+                    # if mods & pygame.KMOD_CTRL:
+                    # Dessine tous les elements qui sont exactement un des ensembles 
+                    # TempSelect et selection_elem
+                    elements = set(temp_select).symmetric_difference(self.selection_elem)
+
+                    for elem in elements:
+                        pygame.draw.rect(ecran, self.couleur_selection, self.camera.rel_rect(elem), 1)
+
+                # Dessinons la selection
+                elif self.selection_elem:
+
+                    extra_offset = self.mouve_select_offset(pos_souris)
+
+                    for elem in self.selection_elem:
+                        if extra_offset and (mods & pygame.KMOD_CTRL or not elem.vivant()):
+                            # Ombre l'endroit de collage potentiel
+                            ImageOmbree = elem.image.convert()
+                            ImageOmbree.set_alpha(100)
+                            ecran.blit(ImageOmbree, self.camera.rel_rect(elem.rect.move(*extra_offset)).topleft)
+                        else:
+                            # Souligne la bordure des elements selectionnes
+                            pygame.draw.rect(ecran, self.couleur_selection, self.camera.rel_rect(elem), 1)
+
+                if self.grilleRef:
+                    # Dessine grille magnetique
+                    pygame.draw.rect(ecran, pygame.Color(0, 255, 255, 100), self.camera.rel_rect(self.grilleRef.rect), 3)
+
             if self.en_pause:
                 self.affiche_voile_d_ombre(100)
 
@@ -622,6 +735,9 @@ class Partie:
         ecran.blit(ombre, (0, 0))
         return ombre
 
+    def SauvegardePossible(self):
+        return self.mode_modifs and self._sauvegarde_possible
+
     @property
     def plein_ecran(self):
         return self._plein_ecran
@@ -636,11 +752,12 @@ class Partie:
 
     def traite_les_evenements(self):
 
-        # Instructions des peripheriques
+        # Instructions des peripheriques 
         for e in pygame.event.get():
 
             if e.type == QUIT:
-                sys.exit()
+                if not self.SauvegardePossible() or self.valide_modifs():
+                    sys.exit()
 
             # Instructions au clavier
             if e.type == KEYDOWN:
@@ -648,11 +765,45 @@ class Partie:
                 key = e.key
                 if key == K_F1:
                     # Affiche l'aide
-                    aide = """  
+                    aide = """  m ou l : passage en / sortie du mode modifs
                                 e : mode plein ecran
+                                i : perso invincible / vulnerable
+                                u : transformation du perso
+                                t : affiche la composition du monde
+                                n : change le nom du perso (coco <-> mario)
 
                                 echap : interruption de la partie - retour au menu
 
+                                En Mode Modifs:
+
+                                Clic Gauche [+ deplacement souris] : Boite de Selection
+                                Clic Gauche + MAJ : ajoute / retranche a la selection
+                                Clic Droit sur un element : edition des parametres d'un element
+                                Clic Droit sur l'image de fond : edition des parametres de niveau
+                            
+                                Clic Droit + CTRL : colle une copie de la selection
+                                Molette souris : changement de l'ordre du plan de la selection (vers le premier ou l'arriere plan)
+
+                                CTRL + deplacement souris vers les bords : deplacement de la camera
+                                ALT + Deplacement Souris : deplacement de la selection
+                                ALT + fleches : deplacement pixel par pixel de la selection
+                                ALT + MAJ + fleches : deplacement continu de la selection 
+
+                                G : (de)selection de l'element de reference du mode grille (pour alignement facile)
+                                En mode grille : CTRL + bouton droit souris enfonce pour coller rapidement de nouveaux elements
+                                Touche Effacer : effacte la selection
+
+                                CTRL + A : selectionne tout le niveau
+
+                                d : recentre le niveau sur la position de depart
+
+                                r : re-initialisation de la selection (perte possible d'info)
+
+                                CTRL + S : sauvegarde du niveau
+                                CTRL + MAJ + S : sauvegarder sous
+                                CTRL + O : ouvrir un niveau
+
+                                CTRL + Espace : mode pas-a-pas Espace en mode pas-a-pas : avance de pas en pas.
                                 """.splitlines()
 
                     intercalaires.planche(aide, taille=8, centre=False, extro=False, intro=False)
@@ -678,7 +829,8 @@ class Partie:
                     media.arret_musique()
                     pygame.mixer.stop()
 
-                    raise InterruptionDePartie
+                    if not self.SauvegardePossible() or self.valide_modifs():
+                        raise InterruptionDePartie
 
                 elif key == K_e:
                     self.plein_ecran = not self.plein_ecran
@@ -702,7 +854,8 @@ class Partie:
                     else:
                         pygame.mixer.music.pause()
 
-                elif key in [pygame.K_PRINT]:
+                elif key in [pygame.K_PRINT, pygame.K_INSERT] or (
+                        EDITABLE and key == pygame.K_v and not e.mod & pygame.KMOD_CTRL):
                     self.imprime_ecran(vers_presse_papier=e.mod & pygame.KMOD_CTRL)
 
                 elif key == K_b:
@@ -712,6 +865,221 @@ class Partie:
 
                     print('BoutonA', elems.ControlePerso.BoutonA_joy)
                     print('BoutonB', elems.ControlePerso.BoutonB_joy)
+
+                elif e.mod & pygame.KMOD_CTRL:
+
+                    if key == K_w:
+                        import profileur
+                        profileur.Bascule()
+
+                    elif key == K_v:
+                        self.perso.vies += 1
+
+                    elif key == K_y:
+                        self._affiche_stats = not self._affiche_stats
+
+                    elif key == K_i:
+                        # Invincibilite
+                        self.perso.invincible = not self.perso.invincible
+
+                        if self.perso.invincible:
+                            print('perso invincible')
+                        else:
+                            print('perso vulnerable')
+
+                    elif key == K_t:
+
+                        self.compte_a_rebours += 100
+
+                    elif key == K_k:
+                        # Composition du monde
+                        print()
+                        print('Dans le niveau')
+                        self.niveau.composition()
+
+                        print()
+                        print('Dans le crible')
+                        for elem in self.crible.Tous():
+                            print(elem)
+
+                        print()
+                        print('Dans le groupe')
+                        for elem in self.elems:
+                            print(elem)
+
+                        print()
+
+                    elif key in [K_l, K_m]:
+                        if e.mod & pygame.KMOD_CTRL:
+                            self.set_mode_modifs()
+
+                    elif key == K_u:
+                        if e.mod & pygame.KMOD_CTRL:
+                            if e.mod & pygame.KMOD_SHIFT:
+                                self.perso.blesse()
+                            else:
+                                self.perso.metamorphe()
+
+                if self.mode_modifs:
+                    from . import menu
+                    GaucheDroite = {K_LEFT: -1, K_RIGHT: 1}
+                    HautBas = {K_UP: -1, K_DOWN: 1}
+                    if key in GaucheDroite or key in HautBas:
+
+                        if e.mod & pygame.KMOD_ALT and not e.mod & pygame.KMOD_CTRL:
+                            # Deplacement fin de la selection pixel par pixel
+                            dP = GaucheDroite.get(key, 0), HautBas.get(key, 0)
+                            if dP[0] or dP[1]:
+                                for elem in self.selection_elem:
+                                    elem.deplace(dP, mode_modifs=True)
+                                    self.monde_modifie = True
+
+                    elif key == K_DELETE:
+                        for elem in self.selection_elem:
+                            self.monde_modifie = True
+
+                            if elem.vivant():
+                                elem.efface()
+
+                        self.selection_elem = []
+
+                    if key == K_d:
+                        # Retour au point de depart
+                        self.camera.maj(self.niveau.posDepart.rect.center)
+
+                    elif key == K_r:
+                        # Reinitialisation des elements selectionnes 
+                        for SelIndex, elem in enumerate(self.selection_elem):
+
+                            nov_elem = type(elem)(elem.rect.topleft)
+                            nov_elem.insere(index=elem.index())
+                            elem.efface()
+
+                            print('Re-init de ', elem)
+                            if hasattr(elem, 'surprise_'):
+                                surprise = elem.surprise_
+                                if surprise:
+                                    nov_elem.surprise_ = type(surprise)()
+                                    nov_elem.surprise_.efface()
+
+                            self.selection_elem[SelIndex] = nov_elem
+                            self.monde_modifie = True
+
+                    elif key == K_p:
+                        # Affichage de la palette d'elements
+                        from . import palette
+                        elem = palette.Selecte()
+
+                        if elem:
+                            self.selection_elem = [elem]
+
+                    elif key == K_f:
+                        self.affiche_crible = not self.affiche_crible
+                        print('affiche crible', self.affiche_crible)
+
+                    elif key == K_v:
+                        if e.mod & pygame.KMOD_CTRL:
+                            self.colle_selection(pygame.mouse.get_pos())
+
+                    elif key == K_g:
+                        # (Des)Active la grille d'alignement
+                        if self.selection_elem:
+                            if self.grilleRef == self.selection_elem[0]:
+                                self.grilleRef = None
+                            else:
+                                self.grilleRef = self.selection_elem[0]
+
+                        else:
+                            self.grilleRef = None
+
+                    elif key == K_a:
+                        if e.mod & pygame.KMOD_CTRL:
+
+                            # Selectionner tout les elements du meme type que la selection...                     
+                            if self.selection_elem:
+
+                                if e.mod & pygame.KMOD_SHIFT:
+                                    # ... parmis les elements du niveau
+                                    population = self.elems
+                                else:
+                                    # ... parmis les elements visibles a l'ecran                                                
+                                    population = self.select_elem((0, 0), self.TailleEcran)
+
+                                selection = list(self.selection_elem)
+                                population_par_type = {}
+                                for elem in population:
+                                    population_par_type.setdefault(type(elem), set()).add(elem)
+
+                                select_types = set([type(Elem) for Elem in selection])
+
+                                self.selection_elem = set(self.selection_elem)
+                                for ElemType in select_types:
+                                    NovSel = population_par_type.get(ElemType)
+                                    if NovSel:
+                                        print('Selection de %d %s' % (len(NovSel), ElemType))
+                                        self.selection_elem.maj(NovSel)
+
+                                self.selection_elem = list(self.selection_elem)
+
+                            else:
+                                # Selectionner tout
+                                self.selection_elem = list(self.elems)
+
+                    elif key == K_s:
+
+                        if e.mod & pygame.KMOD_CTRL:
+                            # sauvegarde du niveau
+
+                            if not self.SauvegardePossible():
+                                # Afaire monde imodifiable
+                                menu.BoiteMessage(['Sauvegarde en cours de partie impossible']).boucle()
+
+                            else:
+                                prompt = e.mod & pygame.KMOD_SHIFT
+
+                                self.niveau.Elements = tuple(self.elems)
+                                assert self.perso not in self.niveau.Elements
+
+                                if self.niveau.Sauvegarde(renomme=prompt):
+                                    self.monde_modifie = False
+
+                        elif self.selection_elem:
+                            print()
+                            print("%d elements selectiones :" % len(self.selection_elem))
+                            for elem in sorted(self.selection_elem):
+                                print(elem)
+
+                    elif key == K_o:
+
+                        if e.mod & pygame.KMOD_CTRL:
+                            # Ouvrons un niveau sauvegarde
+                            if self.valide_modifs():
+
+                                prompt = e.mod & pygame.KMOD_SHIFT
+                                if prompt:
+                                    nom_niveau = ''
+                                else:
+                                    nom_niveau = self.niveau.nom
+
+                                nouvLevel = niveau.Ouvrir(nom_niveau)
+
+                                if nouvLevel:
+                                    self.selection_elem = []
+                                    media.VidangeCache()
+
+                                    self.niveau = nouvLevel
+
+                                    self.perso.efface(strict=False)
+                                    self.perso = None
+
+                                    self.compte_a_rebours = 0
+
+                                    self.Init_Niveau()
+
+                                    self.monde_modifie = False
+
+                                    return True
+
 
             elif e.type == pygame.JOYBUTTONDOWN:
                 if not self.en_pause and e.button == ControlePerso.BoutonA_joy:
@@ -728,8 +1096,291 @@ class Partie:
                 else:
                     pass
 
-    def ordonne_elems(self, elems):
-        return sorted(elems, key=self.elems.index)
+            elif self.mode_modifs:
+                ##
+                ## Edition du niveau
+                ##
+
+                mods = pygame.key.get_mods()
+
+                if e.type == pygame.MOUSEMOTION:
+
+                    if self.selection_elem:
+
+                        if pygame.mouse.get_pressed()[2] and self.grilleRef:
+                            self.colle_selection(pygame.mouse.get_pos())
+
+                        elif pygame.mouse.get_pressed()[0]:
+                            pass
+
+                        elif mods & pygame.KMOD_ALT:
+
+                            # Deplace elements existants
+
+                            self.monde_modifie = True
+
+                            # Mode alignement sur grille
+
+                            posRel = self.mouve_select_offset(e.pos)
+                            if posRel:
+                                for elem in self.selection_elem:
+                                    elem.deplace(posRel, mode_modifs=True)
+
+                elif e.type == pygame.MOUSEBUTTONUP:
+
+                    if e.button == 1:
+
+                        if self.clic_precedent is not None:
+
+                            # Rectangle de selection
+                            nouvel_selection = self.select_elem(self.camera.rel_point(self.clic_precedent), e.pos)
+
+                            if nouvel_selection:
+
+                                if mods & pygame.KMOD_SHIFT:
+                                    for elem in nouvel_selection:
+                                        if elem in self.selection_elem:
+                                            self.selection_elem.remove(elem)
+                                        else:
+                                            self.selection_elem.append(elem)
+
+                                elif self.perso in nouvel_selection:
+                                    # Joueur dans la selection - ne selectionnons que lui
+                                    self.selection_elem = [self.perso]
+
+                                elif Vec(self.camera.rel_point(self.clic_precedent)) - Vec(e.pos) < 2:
+                                    # Double click (clic suffisament proches)
+                                    # selectionnons seulement l'element au premier plan
+
+                                    nouvel_selection = self.ordonne_elems(nouvel_selection)
+
+                                    self.selection_elem.append(nouvel_selection[-1])
+
+                                else:
+
+                                    for elem in nouvel_selection:
+                                        if elem not in self.selection_elem:
+                                            self.selection_elem.append(elem)
+
+                                # if self.grilleRef is None and not self.selection_elem[0].vivant():
+                                #    self.grilleRef = self.selection_elem[0]
+
+                        self.clic_precedent = None
+
+                elif e.type == pygame.MOUSEBUTTONDOWN:
+
+                    if e.button == 3:
+
+                        if self.selection_elem and (mods & pygame.KMOD_CTRL or not self.selection_elem[0].vivant()):
+                            # Copier/Coller de la selection
+                            self.colle_selection(e.pos)
+
+                        else:
+
+                            edit_elems = []
+
+                            clic_elems = self.ordonne_elems(self.select_elem(e.pos, e.pos))
+
+                            if self.selection_elem:
+
+                                if clic_elems and clic_elems[-1] in self.selection_elem:
+                                    edit_elems = [Elem for Elem in self.selection_elem if
+                                                  isinstance(Elem, type(clic_elems[-1]))]
+                                    self.selection_elem = edit_elems
+                                else:
+                                    # Deselection
+                                    self.selection_elem = []
+
+                            elif clic_elems:
+                                edit_elems = [clic_elems[-1]]
+
+                            else:
+                                edit_elems = [self.niveau]
+
+                                self.selection_elem = []
+
+                            if edit_elems:
+                                import palette
+
+                                self.affiche_voile_d_ombre()
+
+                                if palette.Editor(*edit_elems):
+                                    self.monde_modifie = True
+
+                    elif e.button == 1:
+
+                        if not mods & pygame.KMOD_SHIFT:
+                            self.selection_elem = []
+
+                        # premier jalon d'une selection
+                        self.clic_precedent = self.camera.abs_point(e.pos)
+
+                    elif e.button in (4, 5):
+                        #
+                        # Change l'ordre des elements des differents plans
+                        #
+                        if self.selection_elem:
+                            #
+                            # Change le plan des elements de la  selection : vers devant ou vers l'arriere
+                            #
+                            en_avant = e.button == 4
+                            select = self.selection_elem[0]
+                            nouv_elems = self.elems
+
+                            if en_avant:
+                                index_gen = range(nouv_elems.index(select), len(nouv_elems))
+
+                            else:
+                                index_gen = reversed(range(0, nouv_elems.index(select)))
+
+                            for index in index_gen:
+                                elem = nouv_elems[index]
+                                if elem != select and elem.rect.colliderect(select):
+                                    break
+                            else:
+                                index = None
+
+                            if en_avant:
+                                if index is None:
+                                    # tout devant
+                                    nouv_elems.deplace(select)
+                                else:
+                                    nouv_elems.deplace(select, nouvelIndex=index + 1)
+
+                            else:
+                                if index is None:
+                                    index = 0  # tout en arriere
+
+                                nouv_elems.deplace(select, nouvelIndex=index)
+
+    def ordonne_elems(self, elements):
+        return sorted(elements, key=self.elems.index)
+
+    def colle_selection(self, pos):
+        # Copier/Coller de la selection dont le barycentre se deplace a pos
+        import copy
+        if not self.selection_elem:
+            return
+
+        extra_offset = self.mouve_select_offset(pos)
+
+        if extra_offset:
+
+            # collage d'element                     
+            try:
+
+                # Colle les elements de la selection
+                for ElemIndex, Elem in enumerate(self.selection_elem):
+
+                    self.monde_modifie = True
+                    nov_elem = copy.deepcopy(Elem)
+
+                    # En mode Grille, n'ajoutons que si l'espace est libre
+
+                    if Elem.vivant():
+                        # Si l'element existe deja dans le niveau,
+                        # ajoutons le nouvel element dans le meme plan
+                        nov_elem.insere(index=Elem.index())
+
+                    else:
+                        # Nouvel element, au premier plan.
+                        nov_elem.insere()
+
+                    nov_elem.deplace(mouve=extra_offset, mode_modifs=True)
+
+                    self.selection_elem[ElemIndex] = nov_elem
+
+            except:
+                traceback.print_exc()
+
+    def mouve_select_offset(self, pos):
+        """ Calcule le deplacement du barycentre des centres des elements selectionnes aux coords pos 
+            pos : dans le referentiel camera
+        """
+        # Alignement sur la position de l'element grilleRef dont le rect definit une grille de reference
+
+        # Passage du referentiel camera au referentiel absolu                    
+        nouv_coords = Vec(pos) + self.camera.rect.topleft
+
+        if self.grilleRef:
+            ref_rect = self.grilleRef.rect
+
+            coords_ref_grille = nouv_coords - ref_rect.center
+
+            Grille = ref_rect.w, ref_rect.h
+
+            coords_ref_grille = [round(coords_ref_grille[i] / Grille[i], 0) * Grille[i] for i in (0, 1)]
+
+            nouv_coords = Vec(ref_rect.center) + coords_ref_grille
+
+        Bary = barycentre([Elem.rect.center for Elem in self.selection_elem])
+
+        Deplacement = nouv_coords - Bary
+
+        mods = pygame.key.get_mods()
+        verif_intersection = mods & pygame.KMOD_SHIFT
+
+        if verif_intersection:
+            # Verifie que l'on ne se cogne a aucun element visible a l'ecran
+            for Elem in self.selection_elem:
+                tentative_rect = self.camera.rel_rect(Elem.rect.move(*Deplacement))
+                sels = self.select_elem(tentative_rect.topleft, tentative_rect.bottomright)
+                if sels:
+                    return None
+
+        return Deplacement
+
+    def valide_modifs(self):
+        # A faire
+        if self.monde_modifie:
+            import menu
+            if 0 == menu.MenuOptions(options=['Oui', 'Non'], legende=['Abandonner les modifs ?'], pos=(200, 100),
+                                     alpha_fond=150).boucle():
+                self.monde_modifie = False
+                return True
+            else:
+                return False
+
+        else:
+            return True
+
+    def select_elem(self, pt1, pt2):
+        """ Point1 et Point2 sont dans le referentiel camera (relatif) """
+
+        selection_rect = Rect(rect_from_points(pt1, pt2))
+
+        # Passage du referentiel camera au referentiel absolu
+        self.camera.abs_rect_ip(selection_rect)
+        selection = self.crible.intersecte(selection_rect)
+
+        return selection
+
+    def set_mode_modifs(self):
+        if not EDITABLE:
+            self.mode_modifs = False
+
+        else:
+            if self.SauvegardePossible():
+                if self.valide_modifs():
+                    self.mode_modifs = False
+                    self.init_niveau(reinit=False)
+
+                else:
+                    return
+            else:
+                self.mode_modifs = not self.mode_modifs
+
+            if self.mode_modifs:
+
+                pygame.mixer.music.pause()
+
+            else:
+                if not self.en_pause:
+                    pygame.mixer.music.unpause()
+
+                self.retaille_monde()
+
+        pygame.mouse.set_visible(self.mode_modifs)
 
     def bascule_en_pause(self):
         self.en_pause = not self.en_pause
@@ -783,8 +1434,45 @@ class Partie:
         self.affiche_texte("%d" % max(0, self.compte_a_rebours), pos=(-marge_cote, marge_h + police_h),
                            centre=(False, False))
 
+        if self.mode_modifs:
+            # Coordonnees absolues de la souris
+            pos = pygame.mouse.get_pos()
+            pos_abs = self.camera.abs_point(pos)
+
+            self.affiche_texte("%d,%d" % (pos_abs[0], pos_abs[1]),
+                               pos=(ecran_l / 2, - 2 * police_h - 5),
+                               centre=(True, False))
+            if self.clic_precedent:
+                self.affiche_texte("%d,%d" % (pos_abs[0] - self.clic_precedent[0], pos_abs[1] - self.clic_precedent[1]),
+                                   pos=(ecran_l / 2, - police_h - 5), centre=(True, False))
+
+        if self.mode_modifs or self._affiche_stats:
+            self.affiche_texte("IPS : %d" % self.horloge.get_fps(), pos=(-1, -1), centre=(False, False))
+
+            if len(self.selection_elem) == 1:
+                elem = self.selection_elem[0]
+            else:
+                elem = self.perso
+
+            for i, (legende, tuplet) in enumerate(
+                    [('  v', elem.speed), ('h_g', elem.rect.topleft), ('b_d', elem.rect.bottomright),
+                     ('lxh', elem.rect.size)]):
+                self.affiche_texte("%s: %s" % (legende, tuplet), pos=(1, (i + 4) * police_h), centre=(False, False))
+
     def imprime_ecran(self, vers_presse_papier=False):
-        """ Sauvegarde l'image a l'ecran """
+        """ Sauvegarde l'image a l'ecran
+        NomModule = 'win32clipboard'
+        try:
+            win32clipboard = __import__(NomModule)
+        except ImportError:
+            print "Erreur: Imprime ecran necessite l'installation de %s"%NomModule
+            return
+         
+        win32clipboard.OpenClipboard()
+        win32clipboard.EmptyClipboard()
+        win32clipboard.SetClipboardData(win32clipboard.CF_BITMAP, data)
+        win32clipboard.CloseClipboard()
+        """
         surface = pygame.display.get_surface().copy()
 
         if vers_presse_papier:
@@ -803,8 +1491,8 @@ class Partie:
                 os.mkdir(cliche_rep)
 
             nom_fichier = sauvegarde.SelectDansRepertoire(cliche_rep, Suffixe='', defaut=self.niveau.nom,
-                                                         Legende="Sauver l'image d'ecran sous :",
-                                                         choixNouveau=True, valideExistant=True, Effacable=True)
+                                                          Legende="Sauver l'image d'ecran sous :",
+                                                          choixNouveau=True, valideExistant=True, Effacable=True)
 
             if nom_fichier:
                 nom_complet = os.path.join(cliche_rep, nom_fichier + '.png')

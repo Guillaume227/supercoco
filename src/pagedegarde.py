@@ -119,7 +119,7 @@ class Menu:
         Partie.avec_photos = avec_photos
 
         if mode_modifs:
-            Partie.SetModeModifs()
+            Partie.set_mode_modifs()
 
         Partie.boucle(niveau)
 

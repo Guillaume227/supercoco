@@ -31,8 +31,8 @@ class Rectang:
                 self.orig + self.vY]
 
     def PaveLimite(self):
-        CoordX, CoordY = zip(*self.Sommets())
-        return (min(CoordX), min(CoordY)), (max(CoordX), max(CoordY))
+        coord_x, coord_y = zip(*self.Sommets())
+        return (min(coord_x), min(coord_y)), (max(coord_x), max(coord_y))
 
     def Interse(self, Autre):
 
