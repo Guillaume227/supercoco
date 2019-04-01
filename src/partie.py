@@ -47,9 +47,9 @@ def barycentre(coords):
         bar[0] += coors[0]
         bar[1] += coors[1]
 
-    NumPoints = float(len(coords))
-    bar[0] /= NumPoints
-    bar[1] /= NumPoints
+    num_points = len(coords)
+    bar[0] /= num_points
+    bar[1] /= num_points
 
     return bar
 
@@ -74,7 +74,7 @@ class Camera:
             rect = actor.rect
         return Rect(rect.x - self.rect.x, rect.y - self.rect.y, rect.w, rect.h)
 
-    def AbsPoint(self, point):
+    def abs_point(self, point):
         return point[0] + self.rect.x, point[1] + self.rect.y
 
     def rel_point(self, point):
@@ -89,12 +89,12 @@ class Camera:
         self.rect.centerx += dX
         self.rect.centery += dY
 
-    def maj(self, cible, revenirEnArriere=True):
+    def maj(self, cible, revenir_en_arriere=True):
         """mise a jour"""
 
         if cible[0] > self.rect.centerx + self.still_dim:
             self.rect.centerx = cible[0] - self.still_dim
-        elif revenirEnArriere and cible[0] < self.rect.centerx - self.still_dim:
+        elif revenir_en_arriere and cible[0] < self.rect.centerx - self.still_dim:
             self.rect.centerx = cible[0] + self.still_dim
 
         if cible[1] > self.rect.centery + self.still_dim:
@@ -215,7 +215,7 @@ class Partie:
                     self.points += self.perso.points
 
                 self.perso.efface()
-                self.init_niveau(nomNiveau=exc.monde, entree=exc.entree)
+                self.init_niveau(nom_niveau=exc.monde, entree=exc.entree)
 
                 self.lancer_intro_niveau(affiche=exc.decompte)
 
@@ -234,7 +234,7 @@ class Partie:
                 # reset player
                 self.perso = Perso((0, 0), vies=self.perso.vies)
 
-                self.init_niveau(nomNiveau=self.niveau.nom)
+                self.init_niveau(nom_niveau=self.niveau.nom)
 
                 self.lancer_intro_niveau()
 
@@ -274,7 +274,7 @@ class Partie:
                     elif not est_cococouda:
                         sons_obj[random.randint(0, len(sons) - 1)].play()
 
-                    intercalaires.planche(photo=img, Extro=True)
+                    intercalaires.planche(photo=img, extro=True)
 
                 except intercalaires.SautePlanche:
                     break
@@ -328,15 +328,15 @@ class Partie:
         intercalaires.planche([langues.Traduc(langues.Echec)])
         media.arret_musique()
 
-    def init_niveau(self, nomNiveau='', entree=0, reinit=True):
+    def init_niveau(self, nom_niveau='', entree=0, reinit=True):
 
         if reinit or not self.niveau:
-            if niveau.Existe(nomNiveau):
-                info = niveau.Ouvrir(nomNiveau)
+            if niveau.Existe(nom_niveau):
+                info = niveau.Ouvrir(nom_niveau)
                 if info:
                     self.niveau = info
             else:
-                self.niveau = niveau.Monde(nomNiveau)
+                self.niveau = niveau.Monde(nom_niveau)
 
         if self.perso is None:
             self.perso = Perso((0, 0))
@@ -413,7 +413,7 @@ class Partie:
         while True:
 
             if not self.perso.auto_pilote:
-                # Note : commandes de saut et de tirs sont percues comme evenments dans TraiterEvenements ci-dessous
+                # Note : commandes de saut et de tirs sont percues comme evenements dans TraiterEvenements ci-dessous
                 self.perso.Controle.capte()
 
             try:
@@ -432,7 +432,7 @@ class Partie:
 
             if not self.en_pause and (self.pas_a_pas is None or self.pas_a_pas):
 
-                if self.pas_a_pas is True:
+                if self.pas_a_pas is True and not pygame.key.get_pressed()[K_SPACE]:
                     self.pas_a_pas = False
 
                 self.horloge.tick(self.temps_boucle_ms)
@@ -444,14 +444,14 @@ class Partie:
                 try:
 
                     # Boucle sur tous les elements du niveau
-                    extraL = self.camera.rect.w / 2
-                    extraH = 200
-                    RectAction = self.camera.rect.move(-extraL, -extraH)
-                    RectAction.w = RectAction.w + extraL
-                    RectAction.h += 50 + extraH
+                    extra_l = self.camera.rect.w / 2
+                    extra_h = 200
+                    rect_action = self.camera.rect.move(-extra_l, -extra_h)
+                    rect_action.w = rect_action.w + extra_l
+                    rect_action.h += 50 + extra_h
 
                     # Elements actifs
-                    for s in self.crible.intersecte(RectAction):
+                    for s in self.crible.intersecte(rect_action):
 
                         if s.vivant():
 
@@ -557,11 +557,11 @@ class Partie:
                 # yrel    = 0
 
                 if H != he:
-                    # yrel = y/float(H-he)*(hi-he)
+                    # yrel = y/(H-he)*(hi-he)
                     # yrel = max(0, min( hi-y, hi-he ) )
                     pass
 
-                xrel = x / float(L - le) * (li - le)
+                xrel = x / (L - le) * (li - le)
 
                 area = pygame.Rect(xrel, y, le, he)
                 area.clamp_ip(image_fond.get_rect())
@@ -655,13 +655,14 @@ class Partie:
 
                                 """.splitlines()
 
-                    intercalaires.planche(aide, taille=8, centre=False, Extro=False, Intro=False)
+                    intercalaires.planche(aide, taille=8, centre=False, extro=False, intro=False)
 
                 elif key == K_SPACE:
                     # Mode pas a pas
 
                     if e.mod & pygame.KMOD_CTRL:
                         if self.pas_a_pas is None:
+                            print('mode pas a pas active')
                             self.pas_a_pas = False
                         else:
                             self.pas_a_pas = None

@@ -4,35 +4,36 @@ from pygame.locals import *
 from .media import cheminFichier, charge_image
 
 
-class SautePlanche( Exception ):
-	"""Signifie que l'on veut sauter la planche en cours d'affichage"""
-	pass
+class SautePlanche(Exception):
+    """Signifie que l'on veut sauter la planche en cours d'affichage"""
+    pass
+
 
 def recadre_image(img_fond, img):
-    
     l,h = img_fond.get_size()
     
-    iL, iH = img.get_size()
-    if iL > iH:
-        iL, iH = l, int(l*iH/float(iL))
+    i_l, i_h = img.get_size()
+    if i_l > i_h:
+        i_l, i_h = l, int(l*i_h/i_l)
     else:
-        iL, iH = int(h *iL/float(iH)), h
+        i_l, i_h = int(h*i_l/i_h), h
         
-    photo = pygame.transform.scale(img, (iL,iH))
-    coin_haut_gauche = (l-iL)/2,(h-iH)/2
+    photo = pygame.transform.scale(img, (i_l, i_h))
+    coin_haut_gauche = (l-i_l)/2, (h-i_h)/2
     
     return photo, coin_haut_gauche
 
-def planche(text='', taille=16, centre=True, Intro=True, Extro=False, photo=None, duree=-1):
+
+def planche(text='', taille=16, centre=True, intro=True, extro=False, photo=None, duree=-1):
     
     ecran = pygame.display.get_surface()
     
     font = pygame.font.Font(cheminFichier("fonts/font.ttf"), taille)
-    l,h = ecran.get_size()
-    black = pygame.Surface((l,h))
+    l, h = ecran.get_size()
+    black = pygame.Surface((l, h))
     black.fill((0, 0, 0))
     
-    intro = Intro
+    intro = intro
     if intro:
         alpha = 255
     else:
@@ -66,7 +67,7 @@ def planche(text='', taille=16, centre=True, Intro=True, Extro=False, photo=None
         temps += d_t / 1000.
         
         if duree > 0 and temps >= duree:
-            Extro = True
+            extro = True
         
         for e in pygame.event.get():
             
@@ -79,7 +80,7 @@ def planche(text='', taille=16, centre=True, Intro=True, Extro=False, photo=None
                 
                 elif e.key in (K_SPACE, K_RETURN):
                     intro = False
-                    if Extro:
+                    if extro:
                         extro = True
                     else:
                         ecran.blit(black, (0, 0))
@@ -89,7 +90,7 @@ def planche(text='', taille=16, centre=True, Intro=True, Extro=False, photo=None
                     break
                 else:
                     intro = False
-                    if Extro:
+                    if extro:
                         extro = True
                     else:
                         ecran.blit(black, (0, 0))

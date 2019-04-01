@@ -92,7 +92,7 @@ def loads(fileObj):
         self.append(klass)
 
     unpickler = pickle.Unpickler(fileObj)
-    #unpickler.dispatch[pickle.GLOBAL] = mapped_load_global
+    # unpickler.dispatch[pickle.GLOBAL] = mapped_load_global
     copyreg.dispatch_table[pickle.GLOBAL] = mapped_load_global
     return unpickler.load()
 

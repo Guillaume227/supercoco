@@ -882,7 +882,7 @@ class Perso(Dessinable, Personnage):
         self.accroupi = False
         self._vers_gauche = False
         self.Controle.Reset()
-        self.rafraichit_image(auRepos=True)
+        self.rafraichit_image(au_repos=True)
 
     @property
     def boursePieces(self):
@@ -989,7 +989,7 @@ class Perso(Dessinable, Personnage):
                 self.rect.w = self.image.get_width()
                 self.deplace(strict=False)
 
-    def rafraichit_image(self, auRepos=True):
+    def rafraichit_image(self, au_repos=True):
 
         if self.decompte_kamea > 0:
             numImgs = len(self.images_kamea[0])
@@ -1042,17 +1042,17 @@ class Perso(Dessinable, Personnage):
 
             if self.agrippe is not False:
 
-                if not auRepos:
+                if not au_repos:
                     self.frame += 1
 
-                imgIndex = 8 - (self.frame // self.freq % 2)
+                img_index = 8 - (self.frame // self.freq % 2)
 
             elif self.volte_face:
                 # Se retourne
-                imgIndex = 5
+                img_index = 5
 
             elif self.accroupi:
-                imgIndex = 6
+                img_index = 6
 
             elif self.en_saut:
 
@@ -1061,20 +1061,20 @@ class Perso(Dessinable, Personnage):
                     self.frame += 1
 
                     if self.brasse_compteur == 0 or self.brasse_compteur > 20:
-                        imgIndex = 9 + self.frame // self.freq % 2
+                        img_index = 9 + self.frame // self.freq % 2
 
                     elif self.brasse_compteur > 10:
-                        imgIndex = 13 + self.frame // self.freq % 2
+                        img_index = 13 + self.frame // self.freq % 2
 
                     else:  # if self.brasse_compteur > 0:
-                        imgIndex = 11 + self.frame // self.freq % 2
+                        img_index = 11 + self.frame // self.freq % 2
 
                 else:
-                    imgIndex = 4
+                    img_index = 4
 
-            elif auRepos:
+            elif au_repos:
 
-                imgIndex = 0
+                img_index = 0
 
             else:
                 # Marche / Course
@@ -1084,9 +1084,9 @@ class Perso(Dessinable, Personnage):
                 if self.pas_de_course:
                     freq //= 2
 
-                imgIndex = self.frame // freq % 3 + 1
+                img_index = self.frame // freq % 3 + 1
 
-            self.image = self.images[self._vers_gauche][imgIndex]
+            self.image = self.images[self._vers_gauche][img_index]
 
         if self.image and not self.agrippe:
             self.recadre_image()
@@ -1108,7 +1108,7 @@ class Perso(Dessinable, Personnage):
                 self.metamorphe(touche=True)
                 self.son_tape.play()
 
-    def tue(self, side=None, sautDeFace=True):
+    def tue(self, side=None, saut_de_face=True):
         if not self.mourant:
             if not self.invincible:
 
@@ -1121,7 +1121,7 @@ class Perso(Dessinable, Personnage):
 
                 pd = SautDeLaMort(self.rect.center, images=[charge_image(self.nomImagePerdu)])
 
-                if not sautDeFace:
+                if not saut_de_face:
                     pd.visible_ = False
                 self.efface()
 
@@ -1146,7 +1146,7 @@ class Perso(Dessinable, Personnage):
             if sprite.penetrable and not sprite.penetrable[_CoteReciproque[side]]:
                 self.en_rebond = False
 
-    def saute(self, impulsionExtra=1):
+    def saute(self, impulsion_extra=1):
 
         if not self.auto_pilote:
 
@@ -1159,16 +1159,16 @@ class Perso(Dessinable, Personnage):
                     if self.brasse_compteur > 20:
                         return
                     self.brasse_compteur = 24
-                    self.speed[1] = -5.4 * impulsionExtra
+                    self.speed[1] = -5.4 * impulsion_extra
                     self.son_nage.play()
 
                 else:
                     if self.speed[0] == 0:
-                        self.speed[1] = -9.4 * impulsionExtra
+                        self.speed[1] = -9.4 * impulsion_extra
                     elif abs(self.speed[0]) <= 3:
-                        self.speed[1] = -9.6 * impulsionExtra
+                        self.speed[1] = -9.6 * impulsion_extra
                     else:
-                        self.speed[1] = -10 * impulsionExtra
+                        self.speed[1] = -10 * impulsion_extra
 
                     self.jump_sound.play()
 
@@ -1288,7 +1288,7 @@ class Perso(Dessinable, Personnage):
         if self.en_transformation:
 
             self.en_transformation -= 1
-            self.rafraichit_image(auRepos=True)
+            self.rafraichit_image(au_repos=True)
             self.recadre_image(insere=not self.en_transformation)
 
             return
@@ -1309,7 +1309,7 @@ class Perso(Dessinable, Personnage):
                 else:
                     BouleDeFeu(self.rect.topright)
 
-            auRepos = True
+            au_repos = True
 
         else:
 
@@ -1355,7 +1355,7 @@ class Perso(Dessinable, Personnage):
                 self.speed[0] = dx
                 self.speed[1] = dy
 
-                auRepos = dy == 0
+                au_repos = dy == 0
 
             else:
 
@@ -1435,11 +1435,11 @@ class Perso(Dessinable, Personnage):
                     else:
                         dx = 0
 
-                auRepos = dx == 0
+                au_repos = dx == 0
 
                 self.speed[0] = dx
 
-        self.rafraichit_image(auRepos=auRepos)
+        self.rafraichit_image(au_repos=au_repos)
 
         self.sous_l_eau = 0
 
@@ -1464,7 +1464,7 @@ class Perso(Dessinable, Personnage):
                 self.chute = False
                 self.saute(2)
             else:
-                self.tue(sautDeFace=False)
+                self.tue(saut_de_face=False)
 
 
 class ControlePerso:
@@ -1563,22 +1563,22 @@ class PersoNonJoueur(Perso):
         self.oisif = 20
         if random.randint(0, 1):
             # Fille
-            nomImages = ["Aurorepetite%d.png" % i for i in (1, 2)] * 4
+            nom_images = ["Aurorepetite%d.png" % i for i in (1, 2)] * 4
             self.toutes_images = [
-                [[[charge_image(imgName, flip=flip) for imgName in nomImages] for flip in (False, True)]]]
+                [[[charge_image(imgName, flip=flip) for imgName in nom_images] for flip in (False, True)]]]
             self.rect = self.toutes_images[0][0][0][0].get_rect()
 
     def action_in_camera(self, joueur, camera):
 
-        distx = joueur.rect.centerx - self.rect.centerx
+        dist_x = joueur.rect.centerx - self.rect.centerx
 
-        if abs(distx) > 220 + 30 * random.random():
+        if abs(dist_x) > 220 + 30 * random.random():
 
             self.Controle.Reset()
 
-            self.Controle.BoutonB = self.Controle.BoutonB or abs(distx) > 280 + 40 * random.random()
+            self.Controle.BoutonB = self.Controle.BoutonB or abs(dist_x) > 280 + 40 * random.random()
 
-            if distx > 0:
+            if dist_x > 0:
                 self.Controle.Droite = 100
             else:
                 self.Controle.Gauche = 100
@@ -1626,15 +1626,15 @@ class Princesse(AutoMobile, Personnage):
 
     def action_in_camera(self, joueur, camera):
 
-        distX = joueur.rect.centerx - self.rect.centerx
-        if not self.reveillee and abs(distX) < self.distance_reveil_:
+        dist_x = joueur.rect.centerx - self.rect.centerx
+        if not self.reveillee and abs(dist_x) < self.distance_reveil_:
             self.reveillee = True
 
         if self.reveillee:
 
-            if abs(distX) > self.distance_perso_:
+            if abs(dist_x) > self.distance_perso_:
 
-                if abs(distX) > 3 * self.distance_perso_:
+                if abs(dist_x) > 3 * self.distance_perso_:
 
                     vitesse = abs(joueur.speed[0]) + 1
                 else:
@@ -1642,14 +1642,14 @@ class Princesse(AutoMobile, Personnage):
 
                 self.speed[0] = vitesse
 
-                if distX <= 0:
+                if dist_x <= 0:
                     self.speed[0] *= -1
 
-            elif abs(distX) < joueur.rect.w:
-                self.speed[0] = -2 if distX > 0 else 2
+            elif abs(dist_x) < joueur.rect.w:
+                self.speed[0] = -2 if dist_x > 0 else 2
             else:
                 self.speed[0] = 0
-                self._vers_gauche = distX < 0
+                self._vers_gauche = dist_x < 0
 
     def rafraichit_image(self):
 
@@ -1680,14 +1680,14 @@ class Figurant(Dessinable, Personnage):
     @nom_.setter
     def nom_(self, val):
         self._nom = val
-        nomImages = ['Perso/%s%d.png' % (val, i) for i in (1, 2)]
-        self.set_images(nomImages)
+        nom_images = ['Perso/%s%d.png' % (val, i) for i in (1, 2)]
+        self.set_images(nom_images)
 
         self.image = self.images[self._vers_gauche][0]
 
-        midbottom = self.rect.midbottom
+        mid_bottom = self.rect.midbottom
         self.rect = self.image.get_rect()
-        self.rect.midbottom = midbottom
+        self.rect.midbottom = mid_bottom
 
     def action_in_camera(self, joueur, camera):
 
@@ -1703,7 +1703,6 @@ class Figurant(Dessinable, Personnage):
             self.compteur_ovation = self.periode_ovation_
             self.frame = 0
             repositionne = True
-
 
         elif self.compteur_ovation == self.duree_ovation_:
             self.frame = 1
@@ -2014,7 +2013,7 @@ class ChampiCoco(ChampiVert):
             if self.chrono < 0:
                 self.efface()
                 # pygame.time.wait(3000)
-                raise interruptions.TransferMonde(self.transfere_monde_, Decompte=True)
+                raise interruptions.TransferMonde(self.transfere_monde_, decompte=True)
 
 
 class ExploBoulette(Dessinable):
@@ -2103,31 +2102,31 @@ class Panneau(Dessinable):
 
     def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
-        cadreRect = camera.rel_rect(self.rect.move((8, 8)))
+        cadre_rect = camera.rel_rect(self.rect.move((8, 8)))
 
-        cadreRect.size = self.cadre
+        cadre_rect.size = self.cadre
         # Dessine les affiches
 
-        cadreRect1 = cadreRect.copy()
-        cadreRect1.topleft = 0, 0
-        cadreRect1.h = self.fraction
-        cadreRect1.move_ip((0, self.cadre[1] - self.fraction))
+        cadre_rect1 = cadre_rect.copy()
+        cadre_rect1.topleft = 0, 0
+        cadre_rect1.h = self.fraction
+        cadre_rect1.move_ip((0, self.cadre[1] - self.fraction))
 
-        cadreRect2 = cadreRect.copy()
-        cadreRect2.topleft = 0, 0
-        cadreRect2.h = self.cadre[1] - self.fraction
-        cadreRect2.move((0, self.fraction))
+        cadre_rect2 = cadre_rect.copy()
+        cadre_rect2.topleft = 0, 0
+        cadre_rect2.h = self.cadre[1] - self.fraction
+        cadre_rect2.move((0, self.fraction))
 
-        pos1 = cadreRect
-        pos2 = cadreRect.move((0, self.fraction))
+        pos1 = cadre_rect
+        pos2 = cadre_rect.move((0, self.fraction))
 
-        for img, destRect, pos in (self.image1_, cadreRect1, pos1), (self.image2_, cadreRect2, pos2):
+        for img, dest_rect, pos in (self.image1_, cadre_rect1, pos1), (self.image2_, cadre_rect2, pos2):
             if self.compteur <= self.vitesse_defilement_ and False:
-                print('Rects', destRect, cadreRect, self.cadre)
-            if destRect.h:
+                print('Rects', dest_rect, cadre_rect, self.cadre)
+            if dest_rect.h:
                 img = charge_image('photos/' + img)
                 img = pygame.transform.scale(img, self.cadre)
-                surf.blit(img.subsurface(destRect), pos)
+                surf.blit(img.subsurface(dest_rect), pos)
 
         # Dessine le cadre
         Dessinable.affiche(self, surf, camera, mode_modifs=mode_modifs, centre=centre, alpha=alpha)
@@ -2224,14 +2223,14 @@ class Morceau(Dessinable):
 class Ebranlable:
     """ Bloc a declenchement"""
 
-    def __init__(self, Surprise=None, NumFois=1, deplacement=None):
+    def __init__(self, surprise=None, num_fois=1, deplacement=None):
 
         self.posOrg = None
         self.dx = 0
         self.dy = 0
-        self.surprise_ = None
+        self.surprise_ = surprise
         self.incassable_ = False
-        self.nombreSurprises_ = NumFois
+        self.nombreSurprises_ = num_fois
 
     def maj(self):
         self.declenche_maj()
@@ -2358,7 +2357,7 @@ class Apparition(Collidable):
         self.pas = self.imgRect.h
 
         if duree:
-            self.pas /= float(duree)
+            self.pas /= duree
             self.pas = int(max(self.pas, 1))
 
     def effet_joueur(self, joueur, side):
@@ -2451,10 +2450,10 @@ class PlatformeQ(Ebranlable, BlocBase):
     nomImages = ["platform-q%s.png" % i for i in (1, 2, 3)]
     freq = 39
 
-    def __init__(self, pos=None, NumFois=1):
+    def __init__(self, pos=None, num_fois=1):
 
         BlocBase.__init__(self, pos)
-        Ebranlable.__init__(self, NumFois=NumFois)
+        Ebranlable.__init__(self, num_fois=num_fois)
 
         self.surprise_ = ChampiTaille
 
@@ -3738,11 +3737,11 @@ class Pigeon(Sautable, Mechant):
 
             else:
 
-                distY = joueur.rect.top - self.rect.bottom
+                dist_y = joueur.rect.top - self.rect.bottom
 
-                if distY > 60 * (1 + .2 * alea):
+                if dist_y > 60 * (1 + .2 * alea):
 
-                    if distY > 150 * (1 + .2 * alea):
+                    if dist_y > 150 * (1 + .2 * alea):
                         # Descend vers le joueur
                         self.speed[1] = 3
                     else:
@@ -4097,7 +4096,7 @@ class PortailMonde(Dessinable, Passage):
             self.chrono_ -= 1
 
         if self.chrono_ == 0:
-            raise interruptions.TransferMonde(self.monde_suivant_, Decompte=self.decompte_)
+            raise interruptions.TransferMonde(self.monde_suivant_, decompte=self.decompte_)
 
     def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
         Dessinable.affiche(self, surf, camera, mode_modifs, centre, alpha)
