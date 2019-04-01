@@ -3430,21 +3430,22 @@ class Mechant(AutoMobile, EnemiInterface):
     def blesse(self):
         self.tue()
 
-    def tue(self, side=None, points=True):
+    def tue(self, side=None, points=True, depouille=True):
 
         charge_son(self.son_efface_).play()
 
-        if self.carcasse:
-            img = charge_image(self.carcasse)
-        else:
-            img = pygame.transform.flip(self.image, True, True)
+        if depouille:
+            if self.carcasse:
+                img = charge_image(self.carcasse)
+            else:
+                img = pygame.transform.flip(self.image, True, True)
 
-        if side in (DROITE, GAUCHE):
-            vX = 3 * -Signe_Direction[side]
-        else:
-            vX = self.speed[0]
+            if side in (DROITE, GAUCHE):
+                v_x = 3 * -Signe_Direction[side]
+            else:
+                v_x = self.speed[0]
 
-        Morceau(self.rect.topleft, images=[img], vX=vX, impulsion=-5)
+            Morceau(self.rect.topleft, images=[img], vX=v_x, impulsion=-5)
 
         if points:
             self.joueur.engrange_points(self.points, pos=self.rect.move(0, -15).topleft)
@@ -3712,24 +3713,24 @@ class Pigeon(Sautable, Mechant):
 
     def effet_joueur(self, joueur, side):
 
-        if side == HAUT:
-            Sautable.effet_joueur(self, joueur, side)
-        else:
-            charge_son(self.son_ecrase).play()
-            self.tue()
+        #if side == HAUT:
+        #    Sautable.effet_joueur(self, joueur, side)
+        #else:
+        charge_son(self.son_ecrase).play()
+        self.tue()
 
     def action_in_camera(self, joueur, camera):
         """ s'envole a l'approche du joueur """
-        distX = joueur.rect.centerx - self.rect.centerx
+        dist_x = joueur.rect.centerx - self.rect.centerx
         if self._vole:
 
             self.speed[1] -= self.gravite
 
             alea = random.random()
 
-            if abs(distX) > self.rayon_joueur_ or not camera.rect.contains(self.rect):
+            if abs(dist_x) > self.rayon_joueur_ or not camera.rect.contains(self.rect):
 
-                if self.speed[0] * distX < 0:
+                if self.speed[0] * dist_x < 0:
                     # revient vers le joueur
                     self.speed[0] *= -1
 
@@ -3756,7 +3757,7 @@ class Pigeon(Sautable, Mechant):
             if alea > .99:
                 # Fiente
 
-                fiente = Fiente()
+                fiente = Fiente(pos=self.rect.center)
                 if self.vers_gauche_:
                     fiente.rect.topright = self.rect.bottomleft
                 else:
@@ -3765,11 +3766,11 @@ class Pigeon(Sautable, Mechant):
                 fiente.speed[1] = 1
         else:
 
-            if abs(distX) < self.dist_envol_:
+            if abs(dist_x) < self.dist_envol_:
                 # s'envole si le joueur se rapproche
                 self.vole_ = True
                 self.speed[0] = 4
-                if distX > 0:
+                if dist_x > 0:
                     self.speed[0] *= -1
                 self.speed[1] = -3
 
@@ -3778,11 +3779,10 @@ class Pigeon(Sautable, Mechant):
 
     def tue(self, side=None, points=True):
 
-        Mechant.tue(self, side=side, points=points)
+        Mechant.tue(self, side=side, points=points, depouille=False)
 
         explo = ["pigeonexplose%d.png" % i for i in (1, 2)]
-        anim = Animation(pos=None, images=explo, durees=[10, 20], vers_gauche=self._vers_gauche)
-        anim.rect.center = self.rect.center
+        anim = Animation(pos=self.rect.center, images=explo, durees=[10, 20], vers_gauche=self._vers_gauche)
         anim.deplace()
 
 
@@ -4045,7 +4045,12 @@ class Animation(Dessinable):
         Dessinable.__init__(self, pos, images=images)
 
         self._vers_gauche = vers_gauche
-        self.rect = self.image.get_rect(center=pos)
+        #print('pos', pos)
+        #print('rect', self.rect)
+        #print('get_rect', self.image.get_rect(center=pos))
+        if pos is not None:
+            self.rect = self.image.get_rect(center=pos)
+
         self.durees = durees
         self.centre = centre
         self.timer = 0
