@@ -1,56 +1,56 @@
 from __future__ import print_function
 from math import sqrt, cos, sin
 
-Rotateurs = {}
+CacheRotateurs = {}
 
 
 def Rot(rad, Arron=3):
-    arronRad = round(rad, Arron)
-    Rotateur = Rotateurs.get(arronRad)
+    arron_rad = round(rad, Arron)
+    rotateur = CacheRotateurs.get(arron_rad)
 
-    if not Rotateur:
-        Rotateur = (cos(rad), sin(rad)), (-sin(rad), cos(rad))
-        Rotateurs[arronRad] = Rotateur
+    if not rotateur:
+        rotateur = (cos(rad), sin(rad)), (-sin(rad), cos(rad))
+        CacheRotateurs[arron_rad] = rotateur
 
-    return Rotateur
+    return rotateur
 
 
 class Rectang:
     """ GrandCote / PetitCote = 2."""
 
-    def __init__(self, Centre, Orient, GrandCote):
+    def __init__(self, centre, orient, grand_cote):
 
-        self.vX = Orient.normale() * GrandCote
-        self.vY = Orient * GrandCote / 2.
-        self.orig = Centre - self.v1 / 2. - self.v2 / 2.
+        self.vX = orient.normale() * grand_cote
+        self.vY = orient * grand_cote / 2.
+        self.orig = centre - self.v1 / 2. - self.v2 / 2.
 
-    def Sommets(self):
+    def sommets(self):
         return [self.orig,
                 self.orig + self.vX,
                 self.orig + self.vX + self.vY,
                 self.orig + self.vY]
 
-    def PaveLimite(self):
-        coord_x, coord_y = zip(*self.Sommets())
+    def pave_limite(self):
+        coord_x, coord_y = zip(*self.sommets())
         return (min(coord_x), min(coord_y)), (max(coord_x), max(coord_y))
 
-    def Interse(self, Autre):
+    def interse(self, autre):
 
-        (Ax1, Ay1), (Ax2, Ay2) = Autre.PaveLimite()
-        (Sx1, Sy1), (Sx2, Sy2) = self.PaveLimite()
+        (Ax1, Ay1), (Ax2, Ay2) = autre.pave_limite()
+        (Sx1, Sy1), (Sx2, Sy2) = self.pave_limite()
 
         if Ax1 >= Sx2 or Sx1 >= Ax2 or Sy2 <= Ay1 or Ay2 <= Sy1:
             return False
 
-        Aorig = Autre.orig - self.orig
+        Aorig = autre.orig - self.orig
         Aorig = Vec(Aorig * self.vX, Aorig * self.vY)
-        AvX = Vec(Autre.vX * self.vX, Autre.vX * self.vY)
-        AvY = Vec(Autre.vY * self.vX, Autre.vY * self.vY)
+        AvX = Vec(autre.vX * self.vX, autre.vX * self.vY)
+        AvY = Vec(autre.vY * self.vX, autre.vY * self.vY)
 
-        for p1, p2 in ((Aorig, Aorig + Autre.vX),
-                       (Aorig + Autre.vX, Aorig + Autre.vX + Autre.vY),
-                       (Aorig + Autre.vY + Autre.vX, Aorig + Autre.vY),
-                       (Aorig + Autre.vY, Aorig,)):
+        for p1, p2 in ((Aorig, Aorig + autre.vX),
+                       (Aorig + autre.vX, Aorig + autre.vX + autre.vY),
+                       (Aorig + autre.vY + autre.vX, Aorig + autre.vY),
+                       (Aorig + autre.vY, Aorig,)):
 
             for q1, q2 in ((0, 0), (1, 0)), ((0, 0), (0, 1)), ((1, 0), (1, 1)), ((0, 1), (1, 1)):
                 return True  # Faux - A continuer

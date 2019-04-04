@@ -52,9 +52,9 @@ class Monde(sauvegarde.Phenixable):
     @property
     def posDepart(self):
         if self.Elements:
-            for Elem in self.Elements:
-                if isinstance(Elem, elems.PositionDepart):
-                    return Elem
+            for elem in self.Elements:
+                if isinstance(elem, elems.PositionDepart):
+                    return elem
 
             print(self, 'position depart non trouvee')
 
@@ -62,79 +62,77 @@ class Monde(sauvegarde.Phenixable):
 
     def composition(self):
         """ Affiche la composition du monde """
-        for Elem in sorted(self.Elements, key=lambda x: x.__class__.__name__):
-            print(Elem)
+        for elem in sorted(self.Elements, key=lambda x: x.__class__.__name__):
+            print(elem)
 
     def Sauvegarde(self, renomme=False):
 
-        nomFichier = self.nom
+        nom_fichier = self.nom
 
         if renomme:
 
-            nomFichier = SelectMonde(defaut=nomFichier)
+            nom_fichier = select_monde(defaut=nom_fichier)
 
-            if not nomFichier:
+            if not nom_fichier:
                 return
 
-        self.nom = nomFichier
+        self.nom = nom_fichier
 
-        filePath = media.cheminFichier(nomFichier + suffixe, subdir=media.SAUVE_REP)
+        file_path = media.cheminFichier(nom_fichier + suffixe, subdir=media.SAUVE_REP)
 
         try:
-            fichierObj = open(filePath, 'wb')
+            with open(file_path, 'wb') as fichier_obj:
+
+                try:
+                    pickle.dump(self, fichier_obj, protocol=2)
+                except:
+                    traceback.print_exc()
+
+            print(nom_fichier, 'sauvegarde')
+
         except:
             traceback.print_exc()
             return
-
-        try:
-            pickle.dump(self, fichierObj, protocol=2)
-        except:
-            traceback.print_exc()
-
-        print
-        nomFichier, 'sauvegarde'
-
-        fichierObj.close()
 
         # sauvegarde reussie
         return True
 
 
-def SelectMonde(defaut=None, choixNouveau=True):
+def select_monde(defaut=None, choix_nouveau=True):
     from . import menu
     import pygame
 
     choix = media.ListeDesMondes() + ['*Nouveau*']
 
     ecran = pygame.display.get_surface()
-    menuChoix = menu.MenuOptions(choix,
-                                 legende=['Choisir un monde :'],
-                                 pos=(ecran.get_width() / 2, 5),
-                                 fonte_h=12,
-                                 centre=False)
+    menu_choix = menu.MenuOptions(choix,
+                                  legende=['Choisir un monde :'],
+                                  pos=(ecran.get_width() / 2, 5),
+                                  fonte_h=12,
+                                  centre=False)
 
-    MondeIndex = menuChoix.boucle()
+    monde_index = menu_choix.boucle()
 
-    if MondeIndex is not None:
+    if monde_index is not None:
 
-        Nom = choix[MondeIndex]
+        nom_monde = choix[monde_index]
 
-        if Nom == '*Nouveau*':
+        if nom_monde == '*Nouveau*':
             while True:
-                Nom = menu.ChampNomMonde(['Nom du niveau :'], defaut=defaut, pos=(40, 100), alpha_fond=200).boucle()
-                if Nom in choix:
-                    menu.BoiteMessage(['Le niveau %s existe deja !' % Nom, ' En choisir un autre.'],
+                nom_monde = menu.ChampNomMonde(['Nom du niveau :'], defaut=defaut, pos=(40, 100), alpha_fond=200).boucle()
+                if nom_monde in choix:
+                    menu.BoiteMessage(['Le niveau %s existe deja !' % nom_monde, ' En choisir un autre.'],
                                       pos=(200, 100)).boucle()
                 else:
                     break
 
-        return Nom
+        return nom_monde
 
 
-def Existe(fileName):
-    if not fileName.endswith(suffixe):
-        fileName += suffixe
-    return os.path.exists(os.path.join(media.SAUVE_REP, fileName))
+def existe(file_name):
+    if not file_name.endswith(suffixe):
+        file_name += suffixe
+    return os.path.exists(os.path.join(media.SAUVE_REP, file_name))
 
 
 def Resauve():
@@ -148,13 +146,12 @@ def Resauve():
     pygame.display.set_mode((640, 480))
 
     for nom_monde in media.ListeDesMondes():
-        print
-        'Resauve', nom_monde
-        mondeObj = Ouvrir(nom_monde)
-        mondeObj.Sauvegarde(renomme=False)
+        print('Resauve', nom_monde)
+        monde_obj = ouvrir(nom_monde)
+        monde_obj.Sauvegarde(renomme=False)
 
 
-def loads(fileObj):
+def loads(file_obj):
     """ Code a activer si le nom d'un module ou d'une classe
         sauvegarde change.
     """
@@ -173,31 +170,31 @@ def loads(fileObj):
         klass = self.find_class(module, name)
         self.append(klass)
 
-    unpickler = pickle.Unpickler(fileObj)
+    unpickler = pickle.Unpickler(file_obj)
     # unpickler.dispatch[pickle.GLOBAL] = mapped_load_global
     copyreg.dispatch_table[pickle.GLOBAL] = mapped_load_global
     return unpickler.load()
 
 
-def Ouvrir(fileName=''):
-    print('Ouvrir', fileName)
+def ouvrir(file_name=''):
 
-    fileName = SelectMonde()
+    if True:
+        file_name = select_monde()
 
-    if not fileName:
-        return
+        if not file_name:
+            return
 
-    if not fileName.endswith(suffixe):
-        fileName += suffixe
+    if not file_name.endswith(suffixe):
+        file_name += suffixe
 
-    filePath = os.path.join(media.SAUVE_REP, fileName)
+    print('ouverture de', file_name)
 
-    fileObj = open(filePath, 'rb')
+    file_path = os.path.join(media.SAUVE_REP, file_name)
 
-    MondeObj = loads(fileObj)
+    with open(file_path, 'rb') as file_obj:
 
-    MondeObj.nom = fileName.split('.')[0]
+        monde_obj = loads(file_obj)
 
-    fileObj.close()
+        monde_obj.nom = file_name.split('.')[0]
 
-    return MondeObj
+        return monde_obj

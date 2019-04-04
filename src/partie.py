@@ -21,12 +21,13 @@ from .vect2d import Vec
 
 try:
     from . import palette
+
     EDITABLE = True
 except:
     EDITABLE = False
 
 
-def getModeEcran(plein_ecran):
+def get_mode_ecran(plein_ecran):
     if plein_ecran:
         flags = pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
     else:
@@ -171,9 +172,9 @@ class Partie:
 
         if self.niveau.parallaxe_:
             print('taille image_fond', self.niveau._image_fond.get_size())
-            fondH = self.niveau._image_fond.get_height()
-            if fondH > self.TailleEcran[1]:
-                rect_min.h = fondH
+            fond_h = self.niveau._image_fond.get_height()
+            if fond_h > self.TailleEcran[1]:
+                rect_min.h = fond_h
 
         rect_min.left = rect.left
         rect_min.right = rect.right
@@ -328,7 +329,7 @@ class Partie:
         pygame.display.flip()
         pygame.time.wait(2500)
 
-    def show_end(self):
+    def ecran_de_fin(self):
         pygame.time.wait(7500)
         pygame.display.flip()
 
@@ -340,8 +341,8 @@ class Partie:
     def init_niveau(self, nom_niveau='', entree=0, reinit=True):
 
         if reinit or not self.niveau:
-            if niveau.Existe(nom_niveau):
-                info = niveau.Ouvrir(nom_niveau)
+            if niveau.existe(nom_niveau):
+                info = niveau.ouvrir(nom_niveau)
                 if info:
                     self.niveau = info
             else:
@@ -566,16 +567,16 @@ class Partie:
                 # Le niveau defile plus ou moins vite que le fond d'ecran
                 x, y = self.camera.rect.topleft
                 li, _hi = image_fond.get_size()
-                L, H = self.camera.rect_monde.size
+                longueur, hauteur = self.camera.rect_monde.size
                 le, he = self.TailleEcran
                 # yrel    = 0
 
-                if H != he:
+                if hauteur != he:
                     # yrel = y/(H-he)*(hi-he)
                     # yrel = max(0, min( hi-y, hi-he ) )
                     pass
 
-                xrel = x / (L - le) * (li - le)
+                xrel = x / (longueur - le) * (li - le)
 
                 area = pygame.Rect(xrel, y, le, he)
                 area.clamp_ip(image_fond.get_rect())
@@ -691,7 +692,8 @@ class Partie:
 
                 if self.grilleRef:
                     # Dessine grille magnetique
-                    pygame.draw.rect(ecran, pygame.Color(0, 255, 255, 100), self.camera.rel_rect(self.grilleRef.rect), 3)
+                    pygame.draw.rect(ecran, pygame.Color(0, 255, 255, 100), self.camera.rel_rect(self.grilleRef.rect),
+                                     3)
 
             if self.en_pause:
                 self.affiche_voile_d_ombre(100)
@@ -735,7 +737,7 @@ class Partie:
         ecran.blit(ombre, (0, 0))
         return ombre
 
-    def SauvegardePossible(self):
+    def sauvegarde_possible(self):
         return self.mode_modifs and self._sauvegarde_possible
 
     @property
@@ -747,7 +749,7 @@ class Partie:
         """ Mode d'affichage plein Ecran / fenetre """
 
         self._plein_ecran = val
-        getModeEcran(self._plein_ecran)
+        get_mode_ecran(self._plein_ecran)
         pygame.mouse.set_visible(False)
 
     def traite_les_evenements(self):
@@ -756,7 +758,7 @@ class Partie:
         for e in pygame.event.get():
 
             if e.type == QUIT:
-                if not self.SauvegardePossible() or self.valide_modifs():
+                if not self.sauvegarde_possible() or self.valide_modifs():
                     sys.exit()
 
             # Instructions au clavier
@@ -829,7 +831,7 @@ class Partie:
                     media.arret_musique()
                     pygame.mixer.stop()
 
-                    if not self.SauvegardePossible() or self.valide_modifs():
+                    if not self.sauvegarde_possible() or self.valide_modifs():
                         raise InterruptionDePartie
 
                 elif key == K_e:
@@ -974,8 +976,8 @@ class Partie:
                             self.selection_elem = [elem]
 
                     elif key == K_f:
-                        self.affiche_crible = not self.affiche_crible
-                        print('affiche crible', self.affiche_crible)
+                        self._affiche_crible = not self._affiche_crible
+                        print('affiche crible', self._affiche_crible)
 
                     elif key == K_v:
                         if e.mod & pygame.KMOD_CTRL:
@@ -1030,7 +1032,7 @@ class Partie:
                         if e.mod & pygame.KMOD_CTRL:
                             # sauvegarde du niveau
 
-                            if not self.SauvegardePossible():
+                            if not self.sauvegarde_possible():
                                 # Afaire monde imodifiable
                                 menu.BoiteMessage(['Sauvegarde en cours de partie impossible']).boucle()
 
@@ -1061,25 +1063,24 @@ class Partie:
                                 else:
                                     nom_niveau = self.niveau.nom
 
-                                nouvLevel = niveau.Ouvrir(nom_niveau)
+                                nouv_level = niveau.ouvrir(nom_niveau)
 
-                                if nouvLevel:
+                                if nouv_level:
                                     self.selection_elem = []
                                     media.VidangeCache()
 
-                                    self.niveau = nouvLevel
+                                    self.niveau = nouv_level
 
                                     self.perso.efface(strict=False)
                                     self.perso = None
 
                                     self.compte_a_rebours = 0
 
-                                    self.Init_Niveau()
+                                    self.init_niveau()
 
                                     self.monde_modifie = False
 
                                     return True
-
 
             elif e.type == pygame.JOYBUTTONDOWN:
                 if not self.en_pause and e.button == ControlePerso.BoutonA_joy:
@@ -1097,9 +1098,9 @@ class Partie:
                     pass
 
             elif self.mode_modifs:
-                ##
-                ## Edition du niveau
-                ##
+                #
+                # Edition du niveau
+                #
 
                 mods = pygame.key.get_mods()
 
@@ -1121,10 +1122,10 @@ class Partie:
 
                             # Mode alignement sur grille
 
-                            posRel = self.mouve_select_offset(e.pos)
-                            if posRel:
+                            pos_rel = self.mouve_select_offset(e.pos)
+                            if pos_rel:
                                 for elem in self.selection_elem:
-                                    elem.deplace(posRel, mode_modifs=True)
+                                    elem.deplace(pos_rel, mode_modifs=True)
 
                 elif e.type == pygame.MOUSEBUTTONUP:
 
@@ -1200,7 +1201,7 @@ class Partie:
                                 self.selection_elem = []
 
                             if edit_elems:
-                                import palette
+                                from . import palette
 
                                 self.affiche_voile_d_ombre()
 
@@ -1313,9 +1314,9 @@ class Partie:
 
             nouv_coords = Vec(ref_rect.center) + coords_ref_grille
 
-        Bary = barycentre([Elem.rect.center for Elem in self.selection_elem])
+        bary = barycentre([Elem.rect.center for Elem in self.selection_elem])
 
-        Deplacement = nouv_coords - Bary
+        deplacement = nouv_coords - bary
 
         mods = pygame.key.get_mods()
         verif_intersection = mods & pygame.KMOD_SHIFT
@@ -1323,17 +1324,17 @@ class Partie:
         if verif_intersection:
             # Verifie que l'on ne se cogne a aucun element visible a l'ecran
             for Elem in self.selection_elem:
-                tentative_rect = self.camera.rel_rect(Elem.rect.move(*Deplacement))
+                tentative_rect = self.camera.rel_rect(Elem.rect.move(*deplacement))
                 sels = self.select_elem(tentative_rect.topleft, tentative_rect.bottomright)
                 if sels:
                     return None
 
-        return Deplacement
+        return deplacement
 
     def valide_modifs(self):
         # A faire
         if self.monde_modifie:
-            import menu
+            from . import menu
             if 0 == menu.MenuOptions(options=['Oui', 'Non'], legende=['Abandonner les modifs ?'], pos=(200, 100),
                                      alpha_fond=150).boucle():
                 self.monde_modifie = False
@@ -1360,7 +1361,7 @@ class Partie:
             self.mode_modifs = False
 
         else:
-            if self.SauvegardePossible():
+            if self.sauvegarde_possible():
                 if self.valide_modifs():
                     self.mode_modifs = False
                     self.init_niveau(reinit=False)
@@ -1490,9 +1491,9 @@ class Partie:
             if not os.path.exists(cliche_rep):
                 os.mkdir(cliche_rep)
 
-            nom_fichier = sauvegarde.SelectDansRepertoire(cliche_rep, Suffixe='', defaut=self.niveau.nom,
-                                                          Legende="Sauver l'image d'ecran sous :",
-                                                          choixNouveau=True, valideExistant=True, Effacable=True)
+            nom_fichier = sauvegarde.SelectDansRepertoire(cliche_rep, suffixe='', defaut=self.niveau.nom,
+                                                          legende="Sauver l'image d'ecran sous :",
+                                                          choix_nouveau=True, valide_existant=True, effacable=True)
 
             if nom_fichier:
                 nom_complet = os.path.join(cliche_rep, nom_fichier + '.png')

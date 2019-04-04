@@ -33,7 +33,7 @@ class Menu:
         """ Mode d'affichage plein Ecran / fenetre """
 
         self._plein_ecran = val
-        partie.getModeEcran(self._plein_ecran)
+        partie.get_mode_ecran(self._plein_ecran)
         pygame.mouse.set_visible(False)
 
     def actions(self, e):
@@ -43,7 +43,6 @@ class Menu:
             return
 
         elif e.type == KEYDOWN:
-
             if e.key == pygame.K_e:
                 self.plein_ecran = not self.plein_ecran
 
@@ -61,7 +60,7 @@ class Menu:
         else:
             options = [[langues.Traduc(langues.MENU_Lancer), self.lancer_partie], ]
 
-        options += [[langues.Traduc(langues.MENU_Aide), self.Aide],
+        options += [[langues.Traduc(langues.MENU_Aide), self.aide],
                     [langues.Traduc(langues.MENU_Change_Langue), self.change_langue],
                     [langues.Traduc(langues.MENU_Quiter), sys.exit], ]
 
@@ -105,7 +104,6 @@ class Menu:
                 break
 
     def aller_au_niveau(self, niveau=None, mode_modifs=False):
-
         if niveau:
             self.lancer_partie(niveau, mode_modifs=mode_modifs)
 
@@ -114,20 +112,20 @@ class Menu:
 
     def lancer_partie(self, niveau='1-1', mode_modifs=False, avec_photos=False):
 
-        Partie = partie.Partie()
+        partie_obj = partie.Partie()
 
-        Partie.avec_photos = avec_photos
+        partie_obj.avec_photos = avec_photos
 
         if mode_modifs:
-            Partie.set_mode_modifs()
+            partie_obj.set_mode_modifs()
 
-        Partie.boucle(niveau)
+        partie_obj.boucle(niveau)
 
-        self._plein_ecran = Partie.plein_ecran
+        self._plein_ecran = partie_obj.plein_ecran
 
         pygame.mixer.music.stop()
 
-    def Aide(self):
+    def aide(self):
 
         intercalaires.planche([langues.Traduc(langues.MENU_Aide),
                                "",

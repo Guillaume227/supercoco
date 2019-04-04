@@ -316,7 +316,7 @@ class Dessinable:
 
                         else:
                             # DROITE, GAUCHE
-                            print('chocs', chocs)
+                            pass # print('chocs', chocs)
                             # TODO: sort chocs with right comparison func
                             #chocs = sorted(chocs)
 
@@ -3818,7 +3818,7 @@ class Carapace(AutoMobile, Sautable, EnemiInterface):
         self.son_choc = charge_son("smb_bump.wav")
         self.son_tape = charge_son('smb_kick.wav')
         self.tempsCache_ = 300
-        self.cacheChrono = self.tempsCache_
+        self.cache_chrono = self.tempsCache_
         self.parent = parent
         self.serie_degommage = 0
 
@@ -3826,17 +3826,17 @@ class Carapace(AutoMobile, Sautable, EnemiInterface):
 
         if self.speed[0] == 0 and 0 <= self.speed[1] < 2:
             # la tortue ne ressort que d'une carapace immobile
-            self.cacheChrono -= 1
+            self.cache_chrono -= 1
 
-            if self.cacheChrono <= 0:
+            if self.cache_chrono <= 0:
                 self.efface()
                 self.parent.rect.bottomleft = self.rect.bottomleft
                 self.parent.insere()
 
-            elif self.cacheChrono < 100:
+            elif self.cache_chrono < 100:
                 self.image = self.images[0][1]
         else:
-            self.resurectionChrono = self.tempsCache_
+            self.resurection_chrono = self.tempsCache_
 
         self.mouve()
 

@@ -1,14 +1,8 @@
-'''
-Created on 20 Feb 2014
-
-@author: Guiche
-'''
-
-'''
+"""
 Created on 16 Aug 2012
 
 @author: Zarastro
-'''
+"""
 
 import pickle
 import traceback
@@ -28,31 +22,30 @@ derniere_lancee = '__derniere_lancee__'
 nouvelle_entree = '*Nouveau*'
 
 
-def ListeRepertoire(Repertoire, Suffixe=''):
-    return [fileName.split('.')[0] for fileName in os.listdir(Repertoire) if not Suffixe or fileName.endswith(Suffixe)]
+def ListeRepertoire(repertoire, suffixe=''):
+    return [fileName.split('.')[0] for fileName in os.listdir(repertoire) if not suffixe or fileName.endswith(suffixe)]
 
 
-def SelectDansRepertoire(Repertoire, Suffixe='', defaut='', Legende=None, choixNouveau=True, valideExistant=True,
-                         Effacable=False):
-    Choix = ListeRepertoire(Repertoire, Suffixe)
+def SelectDansRepertoire(repertoire, suffixe='', defaut='', legende=None, choix_nouveau=True, valide_existant=True,
+                         effacable=False):
+    choix = ListeRepertoire(repertoire, suffixe)
 
-    Res = SelectObjet(defaut=defaut, legende=Legende, liste=Choix, choixNouveau=choixNouveau,
-                      valideExistant=valideExistant, Effacable=Effacable)
+    res = SelectObjet(defaut=defaut, legende=legende, liste=choix, choix_nouveau=choix_nouveau,
+                      valide_existant=valide_existant, effacable=effacable)
 
-    if Res:
+    if res:
+        selection, a_effacer = res
 
-        Selection, AEffacer = Res
+        for nom_fichier in a_effacer:
+            Effacer(nom_fichier + suffixe, repertoire)
 
-        for NomFichier in AEffacer:
-            Effacer(NomFichier + Suffixe, Repertoire)
-
-        return Selection
+        return selection
 
 
-def SelectObjet(defaut='', liste=[], legende=None, choixNouveau=True, valideExistant=True, Effacable=False):
+def SelectObjet(defaut='', liste=(), legende=None, choix_nouveau=True, valide_existant=True, effacable=False):
     choix = list(liste)
 
-    if choixNouveau:
+    if choix_nouveau:
         choix = ['*Nouveau*'] + choix
 
     if not choix:
@@ -61,8 +54,6 @@ def SelectObjet(defaut='', liste=[], legende=None, choixNouveau=True, valideExis
 
     if legende is None:
         legende = 'Choisir :'
-    else:
-        legende = Legende
 
     menu_choix = menu.MenuOptions(choix, legende=[legende], pos=(5, 5), centre=False, force_liste=True)
 
@@ -83,7 +74,7 @@ def SelectObjet(defaut='', liste=[], legende=None, choixNouveau=True, valideExis
 
                     mondes = [choix[-(Index + 1)] for Index in liste_d_index]
 
-                    if Effacable:
+                    if effacable:
                         if menu.ChampChoix(False, legende=['Effacer %s ?' % (', '.join(mondes))],
                                            pos=(200, 100)).boucle():
                             for monde in mondes:
@@ -112,7 +103,7 @@ def SelectObjet(defaut='', liste=[], legende=None, choixNouveau=True, valideExis
                         if monde is None:
                             break
 
-                    if valideExistant and monde in choix:
+                    if valide_existant and monde in choix:
 
                         if menu.ChampChoix(False, legende=['%s existe deja.' % monde, " ecraser l'existant ?."],
                                            pos=(200, 100)).boucle():
@@ -128,32 +119,31 @@ def SelectObjet(defaut='', liste=[], legende=None, choixNouveau=True, valideExis
 
 
 def Effacer(nom, sauve_dir):
-    fichier = os.path.join(sauve_dir, nom)
-    print
-    'effacage de', fichier
-    os.remove(fichier)
+    chemin_fichier = os.path.join(sauve_dir, nom)
+    print('effacage de', chemin_fichier)
+    os.remove(chemin_fichier)
 
 
-def Sauvegarde(Obj, nom='', FoncDialogue=False, suff='', sauve_dir='', copie=False, ablanc=False, throw=False,
+def Sauvegarde(Obj, nom='', fonc_dialogue=None, suff='', sauve_dir='', copie=False, ablanc=False, throw=False,
                securite=True):
-    nomFichier = nom
+    nom_fichier = nom
 
-    if FoncDialogue:
+    if fonc_dialogue is not None:
 
-        nomFichier = FoncDialogue(defaut=nomFichier, Legende='Sauver sous :')
+        nom_fichier = fonc_dialogue(defaut=nom_fichier, Legende='Sauver sous :')
 
-        if not nomFichier:
+        if not nom_fichier:
             return
 
-    assert nomFichier
+    assert nom_fichier
 
     if not copie:
-        Obj.nom = nomFichier
+        Obj.nom = nom_fichier
 
-    filePath = os.path.join(os.getcwd(), sauve_dir, nomFichier + suff)
+    file_path = os.path.join(os.getcwd(), sauve_dir, nom_fichier + suff)
 
-    if securite and not FoncDialogue and not nom.startswith(derniere_lancee) and 'efface' not in nom and os.path.exists(
-            filePath):
+    if securite and fonc_dialogue is not None and not nom.startswith(derniere_lancee) and 'efface' not in nom and os.path.exists(
+            file_path):
         if not menu.ChampChoix(False, legende=['%s existe deja.' % nom, " ecraser l'existant ?."],
                                pos=(200, 100)).boucle():
             return
@@ -162,12 +152,12 @@ def Sauvegarde(Obj, nom='', FoncDialogue=False, suff='', sauve_dir='', copie=Fal
 
     if isinstance(Obj, pygame.Surface):
 
-        pygame.image.save(Obj, filePath)
+        pygame.image.save(Obj, file_path)
 
     else:
         try:
 
-            dataStreamStr = pickle.dumps(Obj, protocol=2)
+            data_stream_str = pickle.dumps(Obj, protocol=2)
 
         except:
             if throw:
@@ -177,19 +167,14 @@ def Sauvegarde(Obj, nom='', FoncDialogue=False, suff='', sauve_dir='', copie=Fal
                 return False
 
         if ablanc:
-            print
-            'serialisation a blanc reussie pour : ', Obj
-
+            print('serialisation a blanc reussie pour : ', Obj)
         else:
-
             try:
-
-                fichierObj = open(filePath, 'wb')
-                fichierObj.write(dataStreamStr)
+                fichier_obj = open(file_path, 'wb')
+                fichier_obj.write(data_stream_str)
 
                 # sauvegarde reussie
-                print
-                'sauvegarde de', nomFichier
+                print('sauvegarde de', nom_fichier)
                 return True
 
             except:
@@ -200,10 +185,10 @@ def Sauvegarde(Obj, nom='', FoncDialogue=False, suff='', sauve_dir='', copie=Fal
                     return
 
             finally:
-                fichierObj.close()
+                fichier_obj.close()
 
 
-def loads(fileObj):
+def loads(file_obj):
     """ Deserialisation prennant en compte le changement d'un nom de module.
     """
 
@@ -218,7 +203,7 @@ def loads(fileObj):
         klass = self.find_class(module, name)
         self.append(klass)
 
-    unpickler = pickle.Unpickler(fileObj)
+    unpickler = pickle.Unpickler(file_obj)
     unpickler.dispatch[pickle.GLOBAL] = mapped_load_global
     return unpickler.load()
 
@@ -241,7 +226,7 @@ def ouvrir_monde(nom, dossier='', suffixe=''):
         return monde_obj
 
 
-class Phenixable(object):
+class Phenixable:
     """ Interface de serialisation
         pour prendre en compte automatiquement
         l'ajout, le renommage ou le retrait d'attributs.
@@ -252,7 +237,7 @@ class Phenixable(object):
 
     __attr_reinit__ = []  # attributs a reinitialiser. [ nom, ... ]
 
-    def __setstate__(self, Dict):
+    def __setstate__(self, dict_vals):
         """ Deserialisation des elements.
         
             comparaison des attributs deserialises avec ceux aue l'on trouve dans une nouvelle instance de cette classe.
@@ -262,61 +247,57 @@ class Phenixable(object):
             
         """
         # print 'setstate',self.__class__.__name__
-        self.__dict__ = Dict
+        self.__dict__ = dict_vals
 
         classe = type(self)
-        nomClasse = classe.__module__ + '.' + classe.__name__
+        nom_classe = classe.__module__ + '.' + classe.__name__
 
         try:
 
-            newObj = classe()
+            new_obj = classe()
 
         except Exception:
-            print
-            'Probleme pour instancier', nomClasse
+            print('Probleme pour instancier', nom_classe)
             traceback.print_exc()
             return
 
         # Renommage d'attributs
-        for argName in self.__attr_renomme__:
-            if argName in self.__dict__:
-                novArgName = self.__attr_renomme__[argName]
-                self.__dict__[novArgName] = self.__dict__.pop(argName)
+        for arg_name in self.__attr_renomme__:
+            if arg_name in self.__dict__:
+                nov_arg_name = self.__attr_renomme__[arg_name]
+                self.__dict__[nov_arg_name] = self.__dict__.pop(arg_name)
 
         # Reinitialization d'attributs
-        for argName in self.__attr_reinit__:
-            if argName in self.__dict__ and hasattr(newObj, argName):
-                novVal = getattr(newObj, argName)
-                ancVal = self.__dict__[argName]
-                if novVal != ancVal:
-                    print
-                    'reinit', argName, ancVal, '->', novVal
-                self.__dict__[argName] = novVal
+        for arg_name in self.__attr_reinit__:
+            if arg_name in self.__dict__ and hasattr(new_obj, arg_name):
+                nov_val = getattr(new_obj, arg_name)
+                anc_val = self.__dict__[arg_name]
+                if nov_val != anc_val:
+                    print('reinit', arg_name, anc_val, '->', nov_val)
+                self.__dict__[arg_name] = nov_val
 
         keys = list(self.__dict__.keys())
 
         # Ajout de nouveaux attributs trouves dans une nouvelle instanciation de la classe
-        novAttrs = []
-        for argName in newObj.__dict__:
-            if argName not in self.__dict__:
-                self.__dict__[argName] = newObj.__dict__[argName]
-                novAttrs.append(argName)
+        nov_attrs = []
+        for arg_name in new_obj.__dict__:
+            if arg_name not in self.__dict__:
+                self.__dict__[arg_name] = new_obj.__dict__[arg_name]
+                nov_attrs.append(arg_name)
 
-        for argName in novAttrs:
-            if argName not in self.__exc__state__:
-                print
-                nomClasse, self, '  ajout : ', argName
+        for arg_name in nov_attrs:
+            if arg_name not in self.__exc__state__:
+                print(nom_classe, self, '  ajout : ', arg_name)
 
         # Retrait d'attributs (ceux qui ne sont pas trouves dans une nouvelle instanciation de la classe)
-        for argName in keys:
+        for arg_name in keys:
 
             # Conversion des sauvegardees comme instances en leur type.
 
             # Elimination des attributs trouves dans une l'ancienne version mais pas dans la nouvelle.
-            if argName not in newObj.__dict__:
-                print
-                nomClasse, self, 'retrait : ', argName
-                self.__dict__.pop(argName)
+            if arg_name not in new_obj.__dict__:
+                print(nom_classe, self, 'retrait : ', arg_name)
+                self.__dict__.pop(arg_name)
 
     def __getstate__(self):
 
@@ -347,15 +328,14 @@ def Resauve(dossier, suff='', bavard=True, ecrase=False):
         suff : filtre les fichiers par suffixe.
     """
 
-    print
-    print
-    'Resauve mondes de', dossier
+    print()
+    print('Resauve mondes de', dossier)
 
     for fichier in os.listdir(dossier):
 
         if fichier not in ['.svn']:
 
-            print
+            print()
 
             if not suff or fichier.endswith(suff):
                 Obj = Ouvrir(nom=fichier, dossier=dossier)
