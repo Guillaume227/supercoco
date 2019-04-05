@@ -125,7 +125,7 @@ class Partie:
         self.phase_decompte = False
         self.photos_deja_vues = set()
         self.mode_modifs = False
-        self.grilleRef = None
+        self.grille_ref = None
         self.selection_elem = []
         self.SelectionMotif = []
         self.monde_modifie = False
@@ -690,9 +690,9 @@ class Partie:
                             # Souligne la bordure des elements selectionnes
                             pygame.draw.rect(ecran, self.couleur_selection, self.camera.rel_rect(elem), 1)
 
-                if self.grilleRef:
+                if self.grille_ref:
                     # Dessine grille magnetique
-                    pygame.draw.rect(ecran, pygame.Color(0, 255, 255, 100), self.camera.rel_rect(self.grilleRef.rect),
+                    pygame.draw.rect(ecran, pygame.Color(0, 255, 255, 100), self.camera.rel_rect(self.grille_ref.rect),
                                      3)
 
             if self.en_pause:
@@ -986,13 +986,13 @@ class Partie:
                     elif key == K_g:
                         # (Des)Active la grille d'alignement
                         if self.selection_elem:
-                            if self.grilleRef == self.selection_elem[0]:
-                                self.grilleRef = None
+                            if self.grille_ref == self.selection_elem[0]:
+                                self.grille_ref = None
                             else:
-                                self.grilleRef = self.selection_elem[0]
+                                self.grille_ref = self.selection_elem[0]
 
                         else:
-                            self.grilleRef = None
+                            self.grille_ref = None
 
                     elif key == K_a:
                         if e.mod & pygame.KMOD_CTRL:
@@ -1108,7 +1108,7 @@ class Partie:
 
                     if self.selection_elem:
 
-                        if pygame.mouse.get_pressed()[2] and self.grilleRef:
+                        if pygame.mouse.get_pressed()[2] and self.grille_ref:
                             self.colle_selection(pygame.mouse.get_pos())
 
                         elif pygame.mouse.get_pressed()[0]:
@@ -1303,14 +1303,14 @@ class Partie:
         # Passage du referentiel camera au referentiel absolu                    
         nouv_coords = Vec(pos) + self.camera.rect.topleft
 
-        if self.grilleRef:
-            ref_rect = self.grilleRef.rect
+        if self.grille_ref:
+            ref_rect = self.grille_ref.rect
 
             coords_ref_grille = nouv_coords - ref_rect.center
 
-            Grille = ref_rect.w, ref_rect.h
+            grille = ref_rect.w, ref_rect.h
 
-            coords_ref_grille = [round(coords_ref_grille[i] / Grille[i], 0) * Grille[i] for i in (0, 1)]
+            coords_ref_grille = [round(coords_ref_grille[i] / grille[i], 0) * grille[i] for i in (0, 1)]
 
             nouv_coords = Vec(ref_rect.center) + coords_ref_grille
 
@@ -1487,7 +1487,7 @@ class Partie:
             import os
             from . import sauvegarde
 
-            cliche_rep = media.cheminFichier('cliches', verifExiste=False)
+            cliche_rep = media.cheminFichier('cliches', verif_existe=False)
             if not os.path.exists(cliche_rep):
                 os.mkdir(cliche_rep)
 

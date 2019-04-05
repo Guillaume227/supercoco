@@ -312,7 +312,7 @@ class InterfaceDeroulant:
 
                 if nomb_champs_visibles < len(self.champs):
                     ref_index = self.selection_index[-1]
-                    self.haut_index = ref_index - nomb_champs_visibles / 2  # la selection se trouve au centre de l'ecran
+                    self.haut_index = ref_index - nomb_champs_visibles // 2  # la selection se trouve au centre de l'ecran
 
         return maj_valeur
 

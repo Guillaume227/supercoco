@@ -39,8 +39,8 @@ class Palette(menu.ElemInterface):
 
         self.IndexType = 0
         self.marge_HG = 0, 16
-        self.nomb_vignettes = [(self.dim_ecran[i] - self.marge_HG[i]) / self.dim_vignette[i] for i in (0, 1)]
-        coin_HG = [(self.dim_ecran[i] - self.nomb_vignettes[i] * self.dim_vignette[i]) / 2 for i in (0, 1)]
+        self.nomb_vignettes = [(self.dim_ecran[i] - self.marge_HG[i]) // self.dim_vignette[i] for i in (0, 1)]
+        coin_HG = [(self.dim_ecran[i] - self.nomb_vignettes[i] * self.dim_vignette[i]) // 2 for i in (0, 1)]
         self.coin_HG = [max(self.marge_HG[i], coin_HG[i]) for i in (0, 1)]
 
         self.grilles = [[[None for _ in range(self.nomb_vignettes[1])] for _ in range(self.nomb_vignettes[0])] for _
@@ -82,7 +82,7 @@ class Palette(menu.ElemInterface):
 
     def index_pour_pos(self, pos):
         """ index col, index ligne"""
-        return [(pos[i] - self.coin_HG[i]) / self.dim_vignette[i] for i in (0, 1)]
+        return [(pos[i] - self.coin_HG[i]) // self.dim_vignette[i] for i in (0, 1)]
 
     def pos_pour_index(self, index):
         """ index col, index ligne"""
