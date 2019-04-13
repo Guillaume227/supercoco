@@ -46,6 +46,15 @@ class Menu:
             if e.key == pygame.K_e:
                 self.plein_ecran = not self.plein_ecran
 
+            elif e.key == pygame.K_n:
+                from . import niveau
+                file_name = niveau.select_monde()
+
+                if not file_name:
+                    return
+
+                self.lancer_partie(file_name, mode_modifs=e.mod & pygame.KMOD_ALT)
+
     def init_menu_options(self):
 
         ecran = pygame.display.get_surface()

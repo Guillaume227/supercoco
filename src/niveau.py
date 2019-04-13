@@ -178,12 +178,6 @@ def loads(file_obj):
 
 def ouvrir(file_name=''):
 
-    if False:
-        file_name = select_monde()
-
-        if not file_name:
-            return
-
     print('ouverture de', file_name)
 
     if not file_name.endswith(suffixe):
