@@ -82,7 +82,7 @@ class SurfaceP(SurfacePersistante):
 class SurfaceTexte(SurfacePersistante):
 
     def __init__(self, message, police, taille=16, couleur=(0, 0, 0)):
-        super(SurfaceTexte, self).__init__()
+
         self.police = police
         self.taille = taille
         self.couleur = couleur
