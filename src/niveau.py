@@ -43,7 +43,7 @@ class Monde(sauvegarde.Phenixable):
 
     @property
     def arriere_plan_(self):
-        return self._image_fond.fileName
+        return self._image_fond.file_name
 
     @arriere_plan_.setter
     def arriere_plan_(self, val):
@@ -102,7 +102,7 @@ def select_monde(defaut=None, choix_nouveau=True):
     from . import menu
     import pygame
 
-    choix = media.ListeDesMondes() + ['*Nouveau*']
+    choix = media.liste_des_mondes() + ['*Nouveau*']
 
     ecran = pygame.display.get_surface()
     menu_choix = menu.MenuOptions(choix,
@@ -145,7 +145,7 @@ def Resauve():
     pygame.init()
     pygame.display.set_mode((640, 480))
 
-    for nom_monde in media.ListeDesMondes():
+    for nom_monde in media.liste_des_mondes():
         print('Resauve', nom_monde)
         monde_obj = ouvrir(nom_monde)
         monde_obj.Sauvegarde(renomme=False)
@@ -178,16 +178,16 @@ def loads(file_obj):
 
 def ouvrir(file_name=''):
 
-    if True:
+    if False:
         file_name = select_monde()
 
         if not file_name:
             return
 
+    print('ouverture de', file_name)
+
     if not file_name.endswith(suffixe):
         file_name += suffixe
-
-    print('ouverture de', file_name)
 
     file_path = os.path.join(media.SAUVE_REP, file_name)
 

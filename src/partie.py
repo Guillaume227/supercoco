@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import sys
+from builtins import ImportError
 
 import pygame
 from pygame.locals import *
@@ -21,9 +22,8 @@ from .vect2d import Vec
 
 try:
     from . import palette
-
     EDITABLE = True
-except:
+except ImportError:
     EDITABLE = False
 
 
@@ -162,6 +162,13 @@ class Partie:
 
         self.niveau = None
 
+        # declaration de variables ici pour eviter les avertissements de l'analyseur statique
+        self.compte_a_rebours = None
+        self.temps_discret = None
+        self.camera = None
+        self.perso = None
+        self.photos_deja_vues = set()
+
     def retaille_monde(self):
         """ Calcule les dimensions du rectangle contenant tous les elements du niveau"""
         rect = self.niveau.Elements[0].rect.copy()
@@ -206,7 +213,7 @@ class Partie:
 
         self.camera = Camera()
 
-        self.init_niveau(nom_niveau)
+        self.init_niveau(nom_niveau=nom_niveau)
 
         self.lancer_intro_niveau()
 
@@ -257,7 +264,7 @@ class Partie:
         ecran = pygame.display.get_surface()
         ecran.fill((0, 0, 0))
 
-        if self.avec_photos and self.niveau.nom not in self.PhotosDejaVues and not self.mode_modifs:
+        if self.avec_photos and self.niveau.nom not in self.photos_deja_vues and not self.mode_modifs:
             sons = ["smb_coin.wav",
                     "smb_powerup.wav",
                     "1up.ogg",
@@ -329,11 +336,13 @@ class Partie:
         pygame.display.flip()
         pygame.time.wait(2500)
 
-    def ecran_de_fin(self):
+    @staticmethod
+    def ecran_de_fin():
         pygame.time.wait(7500)
         pygame.display.flip()
 
-    def affiche_fin_de_partie(self):
+    @staticmethod
+    def affiche_fin_de_partie():
         media.lire_musique("smb_gameover.wav")
         intercalaires.planche([langues.Traduc(langues.Echec)])
         media.arret_musique()
@@ -427,7 +436,7 @@ class Partie:
 
             if not self.perso.auto_pilote:
                 # Note : commandes de saut et de tirs sont percues comme evenements dans TraiterEvenements ci-dessous
-                self.perso.Controle.capte()
+                self.perso.controle.capte()
 
             try:
                 self.traite_les_evenements()
@@ -557,7 +566,7 @@ class Partie:
                         if self.compte_a_rebours <= 0:
 
                             # Compte a rebours ecoule
-                            if not self.perso.invincible:
+                            if not self.perso.invulnerable:
                                 self.perso.tue()
 
             # Affichage du decors de fond
@@ -605,13 +614,13 @@ class Partie:
                 dX = 0
                 dY = 0
 
-                if self.perso.Controle.Haut:
+                if self.perso.controle.Haut:
                     dY -= 1
-                if self.perso.Controle.Bas:
+                if self.perso.controle.Bas:
                     dY += 1
-                if self.perso.Controle.Gauche:
+                if self.perso.controle.Gauche:
                     dX -= 1
-                if self.perso.Controle.Droite:
+                if self.perso.controle.Droite:
                     dX += 1
 
                 if mods & pygame.KMOD_ALT:
@@ -645,7 +654,7 @@ class Partie:
                     if dX or dY:
 
                         derive = 4
-                        if self.perso.Controle.BoutonB:
+                        if self.perso.controle.BoutonB:
                             derive *= 2
 
                         dX *= derive
@@ -659,7 +668,6 @@ class Partie:
 
                 mods = pygame.key.get_mods()
 
-                temp_select = []
                 if self.clic_precedent and mouse_button_state[0]:
                     # Dessinons le Carre de selection
                     clic_prec_rel = self.camera.rel_point(self.clic_precedent)
@@ -683,9 +691,9 @@ class Partie:
                     for elem in self.selection_elem:
                         if extra_offset and (mods & pygame.KMOD_CTRL or not elem.vivant()):
                             # Ombre l'endroit de collage potentiel
-                            ImageOmbree = elem.image.convert()
-                            ImageOmbree.set_alpha(100)
-                            ecran.blit(ImageOmbree, self.camera.rel_rect(elem.rect.move(*extra_offset)).topleft)
+                            image_ombree = elem.image.convert()
+                            image_ombree.set_alpha(100)
+                            ecran.blit(image_ombree, self.camera.rel_rect(elem.rect.move(*extra_offset)).topleft)
                         else:
                             # Souligne la bordure des elements selectionnes
                             pygame.draw.rect(ecran, self.couleur_selection, self.camera.rel_rect(elem), 1)
@@ -769,7 +777,7 @@ class Partie:
                     # Affiche l'aide
                     aide = """  m ou l : passage en / sortie du mode modifs
                                 e : mode plein ecran
-                                i : perso invincible / vulnerable
+                                i : perso invulnerable / vulnerable
                                 u : transformation du perso
                                 t : affiche la composition du monde
                                 n : change le nom du perso (coco <-> mario)
@@ -838,15 +846,18 @@ class Partie:
                     self.plein_ecran = not self.plein_ecran
 
                 elif key == K_i:
-                    self.perso.invincible = not self.perso.invincible
-                    print('perso invincible:', self.perso.invincible)
+                    if e.mod & pygame.KMOD_CTRL:
+                        self.perso.surpuissant = 500
+                    else:
+                        self.perso.invulnerable = not self.perso.invulnerable
+                        print('perso invulnerable:', self.perso.invulnerable)
 
                 elif key in (ControlePerso.BoutonA_key, ControlePerso.BoutonB_key):
                     if not self.en_pause and not self.phase_decompte:
                         if key == ControlePerso.BoutonA_key:
-                            self.perso.Controle.BoutonA_evenement = True
+                            self.perso.controle.BoutonA_evenement = True
                         else:
-                            self.perso.Controle.BoutonB_evenement = True
+                            self.perso.controle.BoutonB_evenement = True
 
                 elif key == K_F2:
                     # Mode musique / silencieux
@@ -870,22 +881,18 @@ class Partie:
 
                 elif e.mod & pygame.KMOD_CTRL:
 
-                    if key == K_w:
-                        import profileur
-                        profileur.Bascule()
-
-                    elif key == K_v:
+                    if key == K_v:
                         self.perso.vies += 1
 
                     elif key == K_y:
                         self._affiche_stats = not self._affiche_stats
 
                     elif key == K_i:
-                        # Invincibilite
-                        self.perso.invincible = not self.perso.invincible
+                        # invincibilite
+                        self.perso.invulnerable = not self.perso.invulnerable
 
-                        if self.perso.invincible:
-                            print('perso invincible')
+                        if self.perso.invulnerable:
+                            print('perso invulnerable')
                         else:
                             print('perso vulnerable')
 
@@ -950,8 +957,8 @@ class Partie:
                         self.camera.maj(self.niveau.posDepart.rect.center)
 
                     elif key == K_r:
-                        # Reinitialisation des elements selectionnes 
-                        for SelIndex, elem in enumerate(self.selection_elem):
+                        # Reinitialisation des elements selectionnes
+                        for sel_index, elem in enumerate(self.selection_elem):
 
                             nov_elem = type(elem)(elem.rect.topleft)
                             nov_elem.insere(index=elem.index())
@@ -964,7 +971,7 @@ class Partie:
                                     nov_elem.surprise_ = type(surprise)()
                                     nov_elem.surprise_.efface()
 
-                            self.selection_elem[SelIndex] = nov_elem
+                            self.selection_elem[sel_index] = nov_elem
                             self.monde_modifie = True
 
                     elif key == K_p:
@@ -997,14 +1004,14 @@ class Partie:
                     elif key == K_a:
                         if e.mod & pygame.KMOD_CTRL:
 
-                            # Selectionner tout les elements du meme type que la selection...                     
+                            # Selectionner tout les elements du meme type que la selection...
                             if self.selection_elem:
 
                                 if e.mod & pygame.KMOD_SHIFT:
                                     # ... parmis les elements du niveau
                                     population = self.elems
                                 else:
-                                    # ... parmis les elements visibles a l'ecran                                                
+                                    # ... parmis les elements visibles a l'ecran
                                     population = self.select_elem((0, 0), self.TailleEcran)
 
                                 selection = list(self.selection_elem)
@@ -1014,14 +1021,14 @@ class Partie:
 
                                 select_types = set([type(Elem) for Elem in selection])
 
-                                self.selection_elem = set(self.selection_elem)
+                                selected_elems = set(self.selection_elem)
                                 for ElemType in select_types:
-                                    NovSel = population_par_type.get(ElemType)
-                                    if NovSel:
-                                        print('Selection de %d %s' % (len(NovSel), ElemType))
-                                        self.selection_elem.maj(NovSel)
+                                    nov_sel = population_par_type.get(ElemType)
+                                    if nov_sel:
+                                        print(f'Selection de {len(nov_sel)} {ElemType}')
+                                        selected_elems.update(nov_sel)
 
-                                self.selection_elem = list(self.selection_elem)
+                                self.selection_elem = list(selected_elems)
 
                             else:
                                 # Selectionner tout
@@ -1067,7 +1074,7 @@ class Partie:
 
                                 if nouv_level:
                                     self.selection_elem = []
-                                    media.VidangeCache()
+                                    media.vidange_cache()
 
                                     self.niveau = nouv_level
 

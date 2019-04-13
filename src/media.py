@@ -14,11 +14,11 @@ _CacheFonte = {}
 TAILLE_BLOC = 32
 
 
-def ListeDesMondes():
+def liste_des_mondes():
     return [nom_fichier.split('.')[0] for nom_fichier in os.listdir(SAUVE_REP) if nom_fichier.endswith('.monde')]
 
 
-def VidangeCache():
+def vidange_cache():
     _CacheImage.clear()
     _CacheSon.clear()
 
@@ -61,8 +61,10 @@ class SurfaceP(SurfacePersistante):
         self.flip = flip
 
         image = charge_image_no_cache(fileName, scale)
+
         if self.flip:
             image = pygame.transform.flip(image, 1, 0)
+
         pygame.Surface.__init__(self, image.get_size(), 0, image)
 
         self.blit(image, (0, 0))
@@ -97,13 +99,12 @@ class SurfaceTexte(SurfacePersistante):
                     message=self.message)
 
 
-def charge_image_no_cache(filename, scale=1):
-    fullfilename = cheminFichier(filename)
-
+def charge_image_no_cache(nom_fichier, scale=1):
+    chemin_fichier = cheminFichier(nom_fichier)
     try:
-
-        image = pygame.image.load(fullfilename)
-        image = pygame.transform.scale(image, (image.get_width() * scale, image.get_height() * scale))
+        image = pygame.image.load(chemin_fichier)
+        if scale != 1:
+            image = pygame.transform.scale(image, (image.get_width() * scale, image.get_height() * scale))
         return image.convert_alpha()
 
     except pygame.error:
@@ -111,11 +112,11 @@ def charge_image_no_cache(filename, scale=1):
         traceback.print_exc()
 
 
-def charge_image(nomFichier, flip=False, scale=2):
-    if (nomFichier, flip) not in _CacheImage:
-        _CacheImage[(nomFichier, flip)] = SurfaceP(nomFichier, flip, scale)
+def charge_image(nom_fichier, flip=False, scale=2):
+    if (nom_fichier, flip) not in _CacheImage:
+        _CacheImage[(nom_fichier, flip)] = SurfaceP(nom_fichier, flip, scale)
 
-    return _CacheImage[(nomFichier, flip)]
+    return _CacheImage[(nom_fichier, flip)]
 
 
 class SonP(pygame.mixer.Sound):

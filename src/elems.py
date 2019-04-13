@@ -777,7 +777,7 @@ class Perso(Dessinable, Personnage):
         self._boursePieces = 0
         self.points = 0
 
-        self.invincible = False
+        self.invulnerable = False
 
         self.son_mort = charge_son("smb_mariodie.wav")
         self.jump_sound = charge_son("smb_jump-small.wav")
@@ -791,19 +791,21 @@ class Perso(Dessinable, Personnage):
         self.son_bosse = charge_son("smb_bump.wav")
         self.son_vie = charge_son("1up.wav")
 
-        self.Controle = ControlePerso()
+        self.controle = ControlePerso()
+
+        self.son = None
 
     def init_images(self):
 
-        self.nomImagePerdu = "%sdie.png" % self._nom
+        self.nom_image_perdu = "%sdie.png" % self._nom
         self.couleur = 0
 
         if self._nom == 'coco':
 
-            NomCouleurs = [self._nom]
-            nomImagesKamea = ["cococoudakamea%d.png" % i for i in (1, 2, 3, 4, 5)]
+            nom_couleurs = [self._nom]
+            nom_images_kamea = ["cococoudakamea%d.png" % i for i in (1, 2, 3, 4, 5)]
 
-            self.images_kamea = [[charge_image(img, flip=flip) for img in nomImagesKamea] for flip in (False, True)]
+            self.images_kamea = [[charge_image(img, flip=flip) for img in nom_images_kamea] for flip in (False, True)]
 
             """
             self.toutes_images = [ Images_petit, Images_grand ]
@@ -815,35 +817,35 @@ class Perso(Dessinable, Personnage):
             """
             self.toutes_images = []
 
-            for nomCouleur in NomCouleurs:
+            for nom_couleur in nom_couleurs:
 
-                self.nomImages = [nomCouleur + "%d.png" % i for i in (1, 2, 3, 4, 5, 6, 6, 8, 9)]
+                self.nomImages = [nom_couleur + "%d.png" % i for i in (1, 2, 3, 4, 5, 6, 6, 8, 9)]
 
-                self.nomImages += [nomCouleur + "nage%d.png" % i for i in range(1, 7)]
+                self.nomImages += [nom_couleur + "nage%d.png" % i for i in range(1, 7)]
 
                 images_petit = [[charge_image(imgName, flip=flip) for imgName in self.nomImages] for flip in
                                 (False, True)]
 
-                SequenceImgGrand = range(1, 10)
+                sequence_img_grand = range(1, 10)
                 self.toutes_images = [[images_petit], []]
 
                 for racine in 'cocogd', 'cocogdfire', 'cococoudaslip', 'cococouda':
-                    nomImagesGrand = [racine + "%d.png" % i for i in SequenceImgGrand]
+                    nom_images_grand = [racine + "%d.png" % i for i in sequence_img_grand]
 
-                    nomImagesGrand += [racine + "nage%d.png" % i for i in range(1, 7)]
+                    nom_images_grand += [racine + "nage%d.png" % i for i in range(1, 7)]
 
-                    nomImagesGrand += ["cocomoyen.png", racine + "-tire.png"]
+                    nom_images_grand += ["cocomoyen.png", racine + "-tire.png"]
 
-                    images_grand = [[charge_image(img, flip=flip) for img in nomImagesGrand] for flip in (False, True)]
+                    images_grand = [[charge_image(img, flip=flip) for img in nom_images_grand] for flip in (False, True)]
 
                     self.toutes_images[1].append(images_grand)
 
         else:
             # mario
 
-            nomImagesKamea = ["mario-tire-kamea%d.png" % i for i in (1, 2, 3, 4, 5)]
+            nom_images_kamea = ["mario-tire-kamea%d.png" % i for i in (1, 2, 3, 4, 5)]
 
-            self.images_kamea = [[charge_image(img, flip=flip) for img in nomImagesKamea] for flip in (False, True)]
+            self.images_kamea = [[charge_image(img, flip=flip) for img in nom_images_kamea] for flip in (False, True)]
 
             self.toutes_images = []
 
@@ -855,23 +857,23 @@ class Perso(Dessinable, Personnage):
 
                     self.toutes_images[taille].append([])
 
-                    nomCouleur = self._nom + couleur
+                    nom_couleur = self._nom + couleur
 
                     if taille == 1:
-                        SequenceImage = range(1, 10)
-                        nomCouleur += 'gd'
+                        sequence_image = range(1, 10)
+                        nom_couleur += 'gd'
                     else:
-                        SequenceImage = 1, 2, 3, 4, 5, 6, 6, 8, 9
+                        sequence_image = 1, 2, 3, 4, 5, 6, 6, 8, 9
 
-                    nomImages = [nomCouleur + f"{i}.png" for i in SequenceImage]
-                    nomImages += [nomCouleur + f"nage{i}.png" for i in range(1, 7)]
+                    nom_images = [nom_couleur + f"{i}.png" for i in sequence_image]
+                    nom_images += [nom_couleur + f"nage{i}.png" for i in range(1, 7)]
 
                     if taille == 1:
-                        nomImages += [self._nom + "moyen.png", nomCouleur + "-tire.png"]
+                        nom_images += [self._nom + "moyen.png", nom_couleur + "-tire.png"]
                     elif coul_num == 0:
-                        self.nomImages = nomImages
+                        self.nomImages = nom_images
 
-                    imgs = [[charge_image(nomImg, flip=flip) for nomImg in nomImages] for flip in (False, True)]
+                    imgs = [[charge_image(nomImg, flip=flip) for nomImg in nom_images] for flip in (False, True)]
 
                     self.toutes_images[taille][coul_num] = imgs
 
@@ -881,7 +883,7 @@ class Perso(Dessinable, Personnage):
         self.en_saut = False
         self.accroupi = False
         self._vers_gauche = False
-        self.Controle.Reset()
+        self.controle.Reset()
         self.rafraichit_image(au_repos=True)
 
     @property
@@ -977,7 +979,6 @@ class Perso(Dessinable, Personnage):
         else:
             self.son_rapetit.play()
 
-
     def recadre_image(self, insere=False):
         if self.image and self.rect.size != self.image.get_size():
 
@@ -1023,7 +1024,6 @@ class Perso(Dessinable, Personnage):
 
         elif self.surpuissant:
             couleur = self._surpuissant // self.freq % len(self.toutes_images[self.taille])
-
         else:
             couleur = self.couleur
 
@@ -1096,7 +1096,7 @@ class Perso(Dessinable, Personnage):
         Dessinable.efface(self, strict=strict)
 
     def blesse(self):
-        if not self.invincible and not self.surpuissant and self.decompte_touche <= 0:
+        if not self.invulnerable and not self.surpuissant and self.decompte_touche <= 0:
 
             self.decompte_kamea = 0
             self.decompte_tir = 0
@@ -1110,7 +1110,7 @@ class Perso(Dessinable, Personnage):
 
     def tue(self, side=None, saut_de_face=True):
         if not self.mourant:
-            if not self.invincible:
+            if not self.invulnerable:
 
                 pygame.mixer.stop()
                 pygame.mixer.music.stop()
@@ -1119,7 +1119,7 @@ class Perso(Dessinable, Personnage):
                 self.mourant = True
                 self.vies -= 1
 
-                pd = SautDeLaMort(self.rect.center, images=[charge_image(self.nomImagePerdu)])
+                pd = SautDeLaMort(self.rect.center, images=[charge_image(self.nom_image_perdu)])
 
                 if not saut_de_face:
                     pd.visible_ = False
@@ -1224,8 +1224,8 @@ class Perso(Dessinable, Personnage):
                 self.vitesse_base *= 0
 
             elif self.auto_pilote:
-                self.Controle.Reset()
-                self.Controle.Droite = 100
+                self.controle.Reset()
+                self.controle.Droite = 100
 
     @property
     def accroupi(self):
@@ -1256,22 +1256,32 @@ class Perso(Dessinable, Personnage):
         return self._surpuissant > 0
 
     @surpuissant.setter
-    def surpuissant(self, val):
+    def surpuissant(self, duree):
 
-        if val:
-            self._surpuissant = val.duree
-            self._etoile = val
-        elif hasattr(self, '_etoile'):
-            self._etoile.son.stop()
-            pygame.mixer.music.rewind()
-            pygame.mixer.music.play()
+        if duree:
+            pygame.mixer.music.stop()
+            if self.son:
+                self.son.stop()
+            self.son = charge_son("etoile.wav")
+            self.son.play(loops=-1)
+            self._surpuissant += duree
+
+        else:
+            if self.son:
+                self.son.stop()
+
+            if duree == 0:
+                pygame.mixer.music.rewind()
+                pygame.mixer.music.play()
+
+            self._surpuissant = 0
 
     def maj(self):
 
         if self._surpuissant > 0:
             self._surpuissant -= 1
             if self._surpuissant == 0:
-                self.surpuissant = None
+                self.surpuissant = 0
 
         if self.brasse_compteur > 0:
             self.brasse_compteur -= 1
@@ -1320,13 +1330,13 @@ class Perso(Dessinable, Personnage):
 
             if not self.auto_pilote:
 
-                if self.Controle.BoutonA_evenement:
-                    self.Controle.BoutonA_evenement = False
+                if self.controle.BoutonA_evenement:
+                    self.controle.BoutonA_evenement = False
                     # Saut
                     self.saute()
 
-                if self.Controle.BoutonB_evenement:
-                    self.Controle.BoutonB_evenement = False
+                if self.controle.BoutonB_evenement:
+                    self.controle.BoutonB_evenement = False
                     # tire boule de feu
                     self.tire()
 
@@ -1335,20 +1345,20 @@ class Perso(Dessinable, Personnage):
                 dx = 0
                 dy = 0
 
-                if self.Controle.Haut:
+                if self.controle.Haut:
                     dy = -3
                     if self.rect.top <= self._agrippe:
                         dy = 0
 
-                elif self.Controle.Bas:
+                elif self.controle.Bas:
                     dy = 3
 
                 # Change de cote
-                if self.Controle.Droite and not self._vers_gauche:
+                if self.controle.Droite and not self._vers_gauche:
                     self._vers_gauche = True
                     dx = self.rect.w - 5
 
-                elif self.Controle.Gauche and self._vers_gauche:
+                elif self.controle.Gauche and self._vers_gauche:
                     self._vers_gauche = False
                     dx = -self.rect.w + 5
 
@@ -1359,7 +1369,7 @@ class Perso(Dessinable, Personnage):
 
             else:
 
-                if self.en_saut and not self.en_rebond and not self.sous_l_eau and self.Controle.BoutonA:
+                if self.en_saut and not self.en_rebond and not self.sous_l_eau and self.controle.BoutonA:
                     # Anti-gravite
                     extra_saut = .3
                     if abs(self.speed[0]) > 3:
@@ -1376,7 +1386,7 @@ class Perso(Dessinable, Personnage):
                     else:
                         self.chute = True
 
-                if self.Controle.BoutonB and not self.sous_l_eau:
+                if self.controle.BoutonB and not self.sous_l_eau:
                     self.pas_de_course += 1
                 else:
                     self.pas_de_course = 0
@@ -1385,9 +1395,9 @@ class Perso(Dessinable, Personnage):
 
                 dx = 0
 
-                if self.Controle.Gauche:
+                if self.controle.Gauche:
 
-                    if self.Controle.Gauche < 20:
+                    if self.controle.Gauche < 20:
                         dx = -1
                     else:
                         dx = -x_incre
@@ -1397,9 +1407,9 @@ class Perso(Dessinable, Personnage):
 
                     self._vers_gauche = True
 
-                elif self.Controle.Droite:
+                elif self.controle.Droite:
 
-                    if self.Controle.Droite < 20:
+                    if self.controle.Droite < 20:
                         dx = 1
                     else:
                         dx = x_incre
@@ -1409,7 +1419,7 @@ class Perso(Dessinable, Personnage):
 
                     self._vers_gauche = False
 
-                if self.etat > 0 and self.Controle.Bas > 0 and not (self.sous_l_eau and self.en_saut):
+                if self.etat > 0 and self.controle.Bas > 0 and not (self.sous_l_eau and self.en_saut):
                     if not self.accroupi:
                         self.accroupi = True
 
@@ -1456,8 +1466,8 @@ class Perso(Dessinable, Personnage):
     def horschamp(self, joueur, camera):
         if self.rect.top >= camera.rect_monde.bottom:
             # mario tombe dans un trou
-            if self.invincible:
-                # saute hors du trou en mode invincible
+            if self.invulnerable:
+                # saute hors du trou en mode invulnerable
                 dy = camera.rect_monde.bottom - self.rect.bottom
                 self.deplace((0, dy))
                 self.en_saut = False
@@ -1558,7 +1568,7 @@ class PersoNonJoueur(Perso):
     def __init__(self, pos=None, **kwargs):
         # Garcon / fille
         Perso.__init__(self, pos, **kwargs)
-        self.invincible = True
+        self.invulnerable = True
         self.nom = 'coco'
         self.oisif = 20
         if random.randint(0, 1):
@@ -1574,33 +1584,33 @@ class PersoNonJoueur(Perso):
 
         if abs(dist_x) > 220 + 30 * random.random():
 
-            self.Controle.Reset()
+            self.controle.Reset()
 
-            self.Controle.BoutonB = self.Controle.BoutonB or abs(dist_x) > 280 + 40 * random.random()
+            self.controle.BoutonB = self.controle.BoutonB or abs(dist_x) > 280 + 40 * random.random()
 
             if dist_x > 0:
-                self.Controle.Droite = 100
+                self.controle.Droite = 100
             else:
-                self.Controle.Gauche = 100
+                self.controle.Gauche = 100
 
         else:
 
-            self.Controle.BoutonB = False
+            self.controle.BoutonB = False
 
             self.oisif -= 1
 
             if self.oisif < 0:
 
-                self.Controle.Reset()
+                self.controle.Reset()
 
                 self.oisif = int(15 + 30 * random.random())
                 alea = random.randint(-1, 1)
 
                 if alea > 0:
-                    self.Controle.Droite = 100
+                    self.controle.Droite = 100
 
                 elif alea < 0:
-                    self.Controle.Gauche = 100
+                    self.controle.Gauche = 100
 
                 else:
                     pass
@@ -1635,7 +1645,6 @@ class Princesse(AutoMobile, Personnage):
             if abs(dist_x) > self.distance_perso_:
 
                 if abs(dist_x) > 3 * self.distance_perso_:
-
                     vitesse = abs(joueur.speed[0]) + 1
                 else:
                     vitesse = 2
@@ -1776,14 +1785,14 @@ class Chapeau(Collidable):
     points = 8000
 
     def effet_joueur(self, joueur, side):
-        # joueur.Controle.Reset()
+        # joueur.controle.Reset()
         # joueur.auto_pilote = True
-        # joueur.Controle.Droite = 100
+        # joueur.controle.Droite = 100
         imgs = ["Cocopingouin%d.png" % i for i in (1, 2, 3, 4, 5, 6, 7)]
         imgs = [[charge_image(img, flip=flip) for img in imgs] for flip in (False, True)]
         joueur.toutes_images[joueur.taille][joueur.couleur] = imgs
         joueur.enTransformation = joueur.temps_transfo
-        joueur.invincible = True
+        joueur.invulnerable = True
         joueur.son_grandit.play()
         joueur.marche_haut_ = 20  # pour qu'il puisse prendre la marche de l'eglise.
 
@@ -1800,10 +1809,10 @@ class Bague(Collidable):
         self.rafraichit_image()
 
     def effet_joueur(self, joueur, side):
-        joueur.Controle.Reset()
+        joueur.controle.Reset()
         joueur.auto_pilote = True
-        joueur.Controle.Droite = 100
-        joueur.invincible = True
+        joueur.controle.Droite = 100
+        joueur.invulnerable = True
 
         if joueur.etat != 1:
             joueur.etat = 1
@@ -1954,12 +1963,8 @@ class Etoile(SurpriseMouvante, AutoMobile):
 
     def effet_joueur(self, joueur, side):
         self.tue()
-        pygame.mixer.music.stop()
-        self.son = charge_son("etoile.wav")
-        self.son.play(loops=-1)
-
         joueur.points += self.points
-        joueur.surpuissant = self
+        joueur.surpuissant = self.duree
 
 
 class Burger(ChampiTaille):
@@ -1999,7 +2004,7 @@ class ChampiCoco(ChampiVert):
             joueur.nom = "coco"
             joueur.etat = 1
             joueur.auto_pilote = True
-            joueur.Controle.Reset()
+            joueur.controle.Reset()
             self.tue()
 
     def maj(self):
@@ -2609,7 +2614,7 @@ class Tuyeau(CollidableBloc, Passage):
                                 joueur.rect.centerx - self.rect.centerx) < self.rayon_absorbtion_) \
                             or (side in (DROITE, GAUCHE) and abs(
                         joueur.rect.bottom - self.rect.bottom) < self.rayon_absorbtion_)) \
-                    and joueur.Controle.controles[_CoteReciproque[side]]:
+                    and joueur.controle.controles[_CoteReciproque[side]]:
                 # Absorption par le tuyeau vers un autre monde
 
                 charge_son(self.son_absorbtion_).play()
@@ -3046,7 +3051,7 @@ class Tremplin(Collidable):
                 sprite.speed[1] = -self.intensite_saut_
 
                 if isinstance(sprite, Perso):
-                    if sprite.Controle.BoutonA:
+                    if sprite.controle.BoutonA:
                         charge_son(self.son_grand_saut_).play()
                         sprite.speed[1] -= 5.4
                     else:
@@ -3303,7 +3308,7 @@ class Sautable:
 
                 # Rebond sur le mechant
                 joueur.speed[1] = -5
-                if joueur.Controle.BoutonA:
+                if joueur.controle.BoutonA:
                     # Rebondit plus haut si le bouton de saut est presse
                     joueur.speed[1] -= 2.7
 
@@ -3508,36 +3513,36 @@ class EcureuilNuageux(Sautable, Mechant, AllerRetourable):
 
         else:
             if num < 50:
-                imgIndex = 1
+                img_index = 1
 
             else:
 
                 if num == 50:
                     # Projection de projectiles
-                    ClasseProjectile = globals()[self.projectile_]
-                    if hasattr(ClasseProjectile, 'capsule') and ClasseProjectile.capsule:
-                        Capsule(pos=self.rect.topright, Contenu=ClasseProjectile)
+                    classe_projectile = globals()[self.projectile_]
+                    if hasattr(classe_projectile, 'capsule') and classe_projectile.capsule:
+                        Capsule(pos=self.rect.topright, Contenu=classe_projectile)
                     else:
-                        ClasseProjectile(pos=self.rect.topright)
+                        classe_projectile(pos=self.rect.topright)
 
                 num = self.index_temps % self.frequence_cligne_
                 if num < 10:
-                    imgIndex = 2
+                    img_index = 2
                 elif num < 20:
-                    imgIndex = 3
+                    img_index = 3
                 else:
-                    imgIndex = 0
+                    img_index = 0
 
-            self.image = self.images[self._vers_gauche][imgIndex]
+            self.image = self.images[self._vers_gauche][img_index]
 
             if num == 50:
                 self.DeltaX = random.randint(-1, 1) * 100
 
             self.speed[0] = 0
 
-            distJoueur = joueur.rect.centerx - self.rect.centerx
-            if distJoueur > 350:
-                # ratrape le joueur
+            dist_joueur = joueur.rect.centerx - self.rect.centerx
+            if dist_joueur > 350:
+                # rattrape le joueur
                 self.speed[0] = abs(joueur.speed[0]) + 2
             else:
                 # Deplacement        
@@ -4309,7 +4314,7 @@ class MatDrapeau(Collidable):
 
     def effet_joueur(self, joueur, side):
 
-        if (joueur.Controle.Haut or self.declenche_fin_niveau_) and joueur.rect.bottom >= self.rect.top:
+        if (joueur.controle.Haut or self.declenche_fin_niveau_) and joueur.rect.bottom >= self.rect.top:
 
             if joueur.agrippe is False:
 
@@ -4329,13 +4334,13 @@ class MatDrapeau(Collidable):
             self.declenche_fin_niveau_ = False
             self.est_declenche = 30
 
+            joueur.controle.Reset()
+            joueur.surpuissant = None
+            joueur.auto_pilote = True
+            joueur.controle.Bas = 100
+
             media.arret_musique()
             charge_son(self.son_but_).play()
-
-            joueur.Controle.Reset()
-            self.surpuissant = None
-            joueur.auto_pilote = True
-            joueur.Controle.Bas = 100
 
         elif self.est_declenche:
 
@@ -4353,13 +4358,13 @@ class MatDrapeau(Collidable):
                             self.pos_drapeau_ = max_pos_drapeau
 
                 else:
-                    joueur.Controle.Droite = 100
+                    joueur.controle.Droite = 100
 
             elif joueur.agrippe:
 
-                if joueur.Controle.Bas:
-                    joueur.Controle.Droite = 100
-                    joueur.Controle.Bas = 0
+                if joueur.controle.Bas:
+                    joueur.controle.Droite = 100
+                    joueur.controle.Bas = 0
 
                 elif self.est_declenche <= 1:
                     joueur.agrippe = False
@@ -4372,7 +4377,7 @@ class MatDrapeau(Collidable):
                     self.est_declenche -= 1
 
             else:
-                joueur.Controle.Droite = 100
+                joueur.controle.Droite = 100
 
     def affiche(self, surf, camera, mode_modifs=False, centre=None, alpha=None):
 
