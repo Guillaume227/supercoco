@@ -759,13 +759,13 @@ def EditFields(item):
 
     stripped_props = set(propname.strip('_') for propname in props)
 
-    memberVars = [arg for arg in vars(item) if arg.strip('_') not in stripped_props]
+    member_vars = [arg for arg in vars(item) if arg.strip('_') not in stripped_props]
 
-    return sorted(memberVars + props)
+    return sorted(member_vars + props)
 
 
-def getVal(elem, AttrName):
-    valeur = getattr(elem, AttrName)
+def getVal(elem, attr_name):
+    valeur = getattr(elem, attr_name)
     if callable(valeur):
         import inspect
         if not inspect.isclass(valeur):
