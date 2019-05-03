@@ -10,6 +10,7 @@ import pygame
 import sys
 import traceback
 from . import langues
+from . import intermede
 
 
 class ChangeLangueExc(Exception):
@@ -88,6 +89,8 @@ class Menu:
 
     def boucle(self):
 
+        intermede.devinette_sans_echec()
+
         init_menu, options = self.init_menu_options()
 
         while True:
@@ -121,6 +124,7 @@ class Menu:
 
     def lancer_partie(self, niveau='1-1', mode_modifs=False, avec_photos=False):
 
+        partie.get_mode_ecran(True)
         partie_obj = partie.Partie()
 
         partie_obj.avec_photos = avec_photos

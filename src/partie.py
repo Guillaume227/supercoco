@@ -30,8 +30,10 @@ except ImportError:
 def get_mode_ecran(plein_ecran):
     if plein_ecran:
         flags = pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
+        pygame.mouse.set_visible(False)
     else:
         flags = pygame.DOUBLEBUF  # | pygame.NOFRAME
+        pygame.mouse.set_visible(True)
 
     titre = pygame.display.get_caption()
     pygame.display.quit()
@@ -220,7 +222,6 @@ class Partie:
         while True:
 
             try:
-
                 self.boucle_niveau()
 
             except TransferMonde as exc:
@@ -263,6 +264,15 @@ class Partie:
 
         ecran = pygame.display.get_surface()
         ecran.fill((0, 0, 0))
+
+        from . import intermede
+        nb_erreurs = 0
+        while not intermede.devinette('1up.wav', 'smb_bump.wav'):
+            nb_erreurs += 1
+            if nb_erreurs >= 3:
+                from . import interruptions
+                self.perso.vies -= 1
+                raise interruptions.MortJoueur()
 
         if self.avec_photos and self.niveau.nom not in self.photos_deja_vues and not self.mode_modifs:
             sons = ["smb_coin.wav",
@@ -758,7 +768,6 @@ class Partie:
 
         self._plein_ecran = val
         get_mode_ecran(self._plein_ecran)
-        pygame.mouse.set_visible(False)
 
     def traite_les_evenements(self):
 
